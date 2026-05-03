@@ -1,0 +1,8 @@
+# MkDocs build artifacts
+_mkdocs_build/
+
+# Obsidian settings (user-specific)
+.obsidian/
+
+# macOS
+.DS_Store
