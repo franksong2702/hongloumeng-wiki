@@ -169,9 +169,21 @@ def convert_wikilink_in_file(content, source_rel):
     content = re.sub(r'\[\[(.+?)\]\]', replace_wikilink, content)
     content = content.replace('|ESCAPED_PIPE|', '|')
 
-    # 4. 去除 Obsidian block anchors（如 ^hlm-001-zhen-shiyin-meng）
-    # 这些是 Obsidian 深链接用的，网页上不需要
-    content = re.sub(r'\s*\^[a-zA-Z0-9\u4e00-\u9fff-]+(?:\s|$)', ' ', content)
+    # 4. 转换 Obsidian block anchors 为 HTML 锚点
+    # ^hlm-001-zhen-shiyin-meng → <a id="hlm-001-zhen-shiyin-meng"></a>
+    # 网页上不可见，但深链接仍然可以跳过去
+    content = re.sub(r'\s*\^([a-zA-Z0-9\u4e00-\u9fff-]+)(?:\s|$)',
+                     r' <a id="\1"></a> ', content)
+
+    # 5. 修复 wikilink 转换后锚点链接的问题：
+    #    - 去掉 .md# 后面的多余 .md 后缀
+    #    - 去掉 #^ 中的 ^ 符号
+    content = re.sub(r'\.md#\^([a-zA-Z0-9\u4e00-\u9fff-]+)\.md',
+                     r'#\1', content)
+    content = re.sub(r'#\^([a-zA-Z0-9\u4e00-\u9fff-]+)\.md',
+                     r'#\1', content)
+    content = re.sub(r'#\^([a-zA-Z0-9\u4e00-\u9fff-]+)',
+                     r'#\1', content)
 
     return content
 
