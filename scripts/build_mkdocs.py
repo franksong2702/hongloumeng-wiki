@@ -338,6 +338,8 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
             "md_in_html",
             "def_list",
             "footnotes",
+            "admonition",
+            "pymdownx.details",
             {"toc": {"permalink": True}},
         ],
 
