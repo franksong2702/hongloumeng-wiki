@@ -172,6 +172,8 @@ def convert_wikilink_in_file(content, source_rel):
     return content
 
 
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico"}
+
 def copy_and_convert(src_root, dst_root):
     """复制文件并转换 wikilinks。"""
     converted_files = []
@@ -181,7 +183,7 @@ def copy_and_convert(src_root, dst_root):
         dirs[:] = [d for d in dirs if d not in SKIP and not d.startswith(".")]
 
         for fname in files:
-            if fname in SKIP or not fname.endswith(".md"):
+            if fname in SKIP:
                 continue
 
             src = os.path.join(root, fname)
@@ -189,6 +191,16 @@ def copy_and_convert(src_root, dst_root):
             dst = os.path.join(dst_root, src_rel)
 
             os.makedirs(os.path.dirname(dst), exist_ok=True)
+
+            # 图片等静态资源直接复制，不转换
+            if os.path.splitext(fname)[1].lower() in IMAGE_EXTENSIONS:
+                with open(src, "rb") as f_in, open(dst, "wb") as f_out:
+                    f_out.write(f_in.read())
+                converted_files.append(src_rel)
+                continue
+
+            if not fname.endswith(".md"):
+                continue
 
             with open(src, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -299,7 +311,6 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
             "icon": {
                 "repo": "fontawesome/brands/github",
             },
-            "favicon": "images/favicon.png",
         },
 
         "nav": nav,
