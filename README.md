@@ -4,6 +4,8 @@
 
 这是《红楼梦》的 Obsidian Wiki，包含 120 回全文（繁简双版本）、105 个人物页、120 个事件页、38 个概念页、52 个红学专题综述，以及 26 张 AI 插图。
 
+- 在线阅读：[红楼梦 Wiki](https://franksong2702.github.io/hongloumeng-wiki/)
+
 ## 快速开始
 
 - [START_HERE.md](START_HERE.md) — 按你是谁来分入口（第一次读 / 读过想重读 / 研究红学 / 快速查找）
