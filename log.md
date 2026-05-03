@@ -1,5 +1,24 @@
 # 红楼梦 Book Wiki Log
 
+## 2026-05-03（三）：版本号系统 + 状态一致性 + MkDocs 站点
+
+### 版本号系统（v2.0.0）
+- SCHEMA.md 添加版本定义：v2.0.0，记录 v1/v2/v3 版本说明
+- README.md + index.md 展示版本号
+- 遵循 SemVer：小更新更新 patch，新增页面更新 minor，v3 谨慎使用
+
+### 状态一致性修复
+- index.md: status curated-v1→curated-v2；background 页 curated-v2→curated-v3；总文件数 644→765；添加 MkDocs 站点链接
+- ROADMAP.md: status curated-v1→curated-v2；输出页行数字过时修正（人物手册 60→120 行，速读指南 47→98 行）；总文件数 644→765
+- AGENTS.md: 总文件数 644→765
+
+### MkDocs + GitHub Pages 站点
+- scripts/build_mkdocs.py: 构建时转换 wikilinks 为标准链接，复制图片等静态资源，block anchors 转为 HTML 锚点
+- .github/workflows/deploy.yml: push 到 main 时自动编译部署
+- .gitignore: 忽略构建产物
+- GitHub Pages 站点：[franksong2702.github.io/hongloumeng-wiki](https://franksong2702.github.io/hongloumeng-wiki/)
+- README 添加在线阅读链接和版本号
+
 ## 2026-05-03（续）
 
 ### 繁体原文入库

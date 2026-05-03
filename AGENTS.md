@@ -37,13 +37,13 @@ tags: [hongloumeng, meta, agent]
 | `images/` | 26 | AI 插图 | 人物肖像16 + 场景图9 + 四季图1 |
 | `templates/` | 2 | 页面模板 | chapter-template, character-template |
 
-**总文件数：644**
+**总文件数：765**
 
 ## 2. 当前状态快照
 
 | 指标 | 值 |
 |------|---|
-| 总 Markdown 文件 | 644 |
+| 总 Markdown 文件 | 765 |
 | 总字符页行数 | ~4500（93页） |
 | 断链 | 0（19个已在本轮回圈修复） |
 | 占位符 | 0 |

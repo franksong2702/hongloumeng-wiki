@@ -5,7 +5,7 @@ updated: 2026-05-03
 type: index
 book: 红楼梦
 version: v2.0.0
-status: curated-v1
+status: curated-v2
 tags: [book-wiki, 红楼梦, index]
 ---
 
@@ -18,11 +18,12 @@ tags: [book-wiki, 红楼梦, index]
 - 120 回章节页已完成；120 回简体原文 + 120 回繁体原文已入库（`texts/simplified/` 和 `texts/traditional/`）。
 - 105 个人物页（含红学家/批书人）、120 个事件页、38 个概念页已完成实质化。
 - 12 首诗词已全部接入研究；4 首短诗（开篇诗、枉凝眉、满纸荒唐言、螃蟹咏）已 enrich。
-- 7 个 background 页全部 curated-v2（含清代家族制度）。
+- 7 个 background 页全部 curated-v3（含清代家族制度）。
 - 双链缺失为 0；禁止空泛句为 0；核心解释层薄页已清零。
-- Phase 0~6 全部完成；研究型 v2 重编译已完成；21 个红学家页全部扩写为 70+ 行；总文件数 644。
+- Phase 0~7 全部完成；研究型 v2 重编译已完成；21 个红学家页全部扩写为 70+ 行；总文件数 765。
 - 26 张 AI 生成插图（16 人物肖像 + 1 四季图 + 9 场景图），嵌入对应人物页、原文页和事件页。
 - 繁简双版本原文已入库，Wiki 自包含。
+- 新增 MkDocs 站点：[franksong2702.github.io/hongloumeng-wiki](https://franksong2702.github.io/hongloumeng-wiki/)（构建时转换，本地文件不变）。
 - 建议从 [[02_Learn/08_book-wikis/红楼梦/START_HERE.md]] 或 [[02_Learn/08_book-wikis/红楼梦/outputs/红楼梦速读指南.md]] 开始。
 
 ## 入口
