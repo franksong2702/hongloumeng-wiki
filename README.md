@@ -73,6 +73,30 @@
 
 **研究红学**：从 [outputs/红学争议导览.md](outputs/红学争议导览.md) 开始，按版本→作者→真假→宝黛钗→秦可卿→王熙凤→贾府败落的顺序进入专题综述。
 
+## 在 Obsidian 中使用
+
+这个 Wiki 完全基于 Obsidian 构建，双链、反向链接、大纲面板等原生功能均可使用。
+
+### 方法一：Git 克隆（推荐）
+
+```bash
+git clone https://github.com/franksong2702/hongloumeng-wiki.git
+```
+
+然后在 Obsidian 中 **Open folder as vault**，选择克隆下来的目录即可。
+
+### 方法二：下载 ZIP
+
+1. 点击本页面右上角 **Code → Download ZIP**
+2. 解压到任意位置
+3. 在 Obsidian 中 **Open folder as vault**，选择解压后的目录
+
+### 依赖
+
+- Obsidian 1.4+（需支持 wikilinks）
+- 本 Wiki 不依赖任何第三方插件，核心功能全部原生可用
+- 如需使用 Dataview 查询，可在 Obsidian 社区插件中安装 Dataview（可选，不影响阅读）
+
 ## 质量状态
 
 - 完整路径 wikilink 检查：0 broken links
