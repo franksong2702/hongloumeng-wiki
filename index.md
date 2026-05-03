@@ -4,12 +4,14 @@ created: 2026-04-27
 updated: 2026-05-03
 type: index
 book: 红楼梦
+version: v2.0.0
 status: curated-v1
 tags: [book-wiki, 红楼梦, index]
 ---
 
 # 红楼梦 Wiki 索引
 
+> 版本：v2.0.0 · 详见 [[SCHEMA.md#版本|版本说明]]
 
 ## 当前状态
 
