@@ -593,6 +593,112 @@ def check_chapter_key_event_links(
     return findings, dict(stats)
 
 
+def source_text_anchor_spans(lines: list[str]) -> tuple[int, int | None, int | None]:
+    """返回 source-text 页中 frontmatter 结束行和阅读提示区间。
+
+    简体原文页顶部常有 `??? note "📖 阅读提示"` 区块；block anchor 必须落在
+    小说正文段落中，不能落在 frontmatter 或阅读提示里，否则从事件页跳转时
+    会把读者带到 meta 信息，而不是正文现场。
+    """
+
+    frontmatter_end = 0
+    if lines and lines[0] == "---":
+        for line_no, line in enumerate(lines[1:], 2):
+            if line == "---":
+                frontmatter_end = line_no
+                break
+
+    hint_start: int | None = None
+    hint_end: int | None = None
+    for line_no, line in enumerate(lines, 1):
+        if line_no <= frontmatter_end:
+            continue
+        if "??? note" in line and "阅读提示" in line:
+            hint_start = line_no
+            hint_end = len(lines)
+            for candidate in range(line_no + 1, len(lines) + 1):
+                candidate_line = lines[candidate - 1]
+                if candidate_line.strip() and not candidate_line.startswith((" ", "\t")):
+                    hint_end = candidate - 1
+                    break
+            break
+
+    return frontmatter_end, hint_start, hint_end
+
+
+def source_anchor_location(
+    line_no: int,
+    frontmatter_end: int,
+    hint_start: int | None,
+    hint_end: int | None,
+) -> str:
+    if line_no <= frontmatter_end:
+        return "frontmatter"
+    if hint_start is not None and hint_end is not None and hint_start <= line_no <= hint_end:
+        return "reading_hint"
+    return "body"
+
+
+def check_source_anchors(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """检查简体原文页 block anchors 是否唯一且落在正文段落。
+
+    事件页依赖 `texts/simplified/第xxx回.md#^hlm-...` 做精确正文定位。
+    若锚点在阅读提示/frontmatter 中，链接虽然“可跳转”，但不会把读者带到原文段落；
+    若同一锚点重复出现，Obsidian 跳转结果也不可靠。
+    """
+
+    findings: list[Finding] = []
+    stats = Counter()
+    anchor_re = re.compile(r"\^hlm-[A-Za-z0-9_-]+")
+    anchor_locations: dict[str, list[tuple[str, int]]] = defaultdict(list)
+
+    source_paths = [
+        p
+        for p in product_md
+        if rel(p, root).startswith("texts/simplified/") and re.search(r"第\d{3}回\.md$", p.name)
+    ]
+
+    for path in source_paths:
+        r = rel(path, root)
+        lines = read_text(path).splitlines()
+        frontmatter_end, hint_start, hint_end = source_text_anchor_spans(lines)
+        for line_no, line in enumerate(lines, 1):
+            for anchor in anchor_re.findall(line):
+                stats["scanned"] += 1
+                anchor_locations[anchor].append((r, line_no))
+                location = source_anchor_location(line_no, frontmatter_end, hint_start, hint_end)
+                stats[f"location:{location}"] += 1
+                if location != "body":
+                    findings.append(
+                        Finding(
+                            "ERROR",
+                            "source_anchor_not_in_body",
+                            r,
+                            line_no,
+                            f"{anchor} 位于 {location}，应迁移到小说正文段落",
+                        )
+                    )
+
+    for anchor, locations in sorted(anchor_locations.items()):
+        if len(locations) <= 1:
+            continue
+        stats["duplicate"] += 1
+        rendered = ", ".join(f"{path}:{line_no}" for path, line_no in locations[:5])
+        findings.append(
+            Finding(
+                "ERROR",
+                "source_anchor_duplicate",
+                locations[0][0],
+                locations[0][1],
+                f"{anchor} 出现 {len(locations)} 次：{rendered}",
+            )
+        )
+
+    for key in ("scanned", "location:body", "location:reading_hint", "location:frontmatter", "duplicate"):
+        stats.setdefault(key, 0)
+    return findings, dict(stats)
+
+
 def frontmatter_scope(path: Path, root: Path) -> bool:
     r = rel(path, root)
     parts = Path(r).parts
@@ -834,6 +940,7 @@ def render_report(
             [
                 "- alias 类型 WARN 表示短名可通过 alias map 解析，但建议在 Phase 2 改成文件级链接，例如 [[characters/贾宝玉.md|宝玉]]。",
                 "- chapter_key_event_link_unlocalized 表示章节页“关键事件”链接到事件页，但该事件页没有声明对应回目；通常应补事件页定位或移除误链。",
+                "- source_anchor_not_in_body/source_anchor_duplicate 表示原文 block anchor 不在小说正文段落或重复；这会导致事件页跳转不到真正正文现场，属于 ERROR。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
                 "- 默认运行只生成报告；如需把结构问题作为闸门，请加 --strict。",
             ],
@@ -866,6 +973,7 @@ def main() -> int:
         ("wikilinks", lambda: check_wikilinks(root, product_md, indexes)),
         ("markdown_links", lambda: check_markdown_links(root, product_md)),
         ("chapter_key_event_links", lambda: check_chapter_key_event_links(root, product_md, indexes)),
+        ("source_anchors", lambda: check_source_anchors(root, product_md)),
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
