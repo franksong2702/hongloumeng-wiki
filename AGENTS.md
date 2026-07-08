@@ -22,7 +22,7 @@ tags: [hongloumeng, meta, agent]
 | `chapters/` | 120 | 120回章节导读 | 概要 + 出场人物 + 关键事件 + 伏笔 |
 | `texts/simplified/` | 120 | 简体原文（只读转换层） | 原文 + block anchors |
 | `characters/` | 105 | 人物页 | 人物小传 + 关键关系 + 关键章节 + 相关页面 |
-| `events/` | 120 | 事件页 | 事件经过 + 叙事功能 + 相关回目 + 相关概念 |
+| `events/` | 130 | 事件页 | 事件经过 + 叙事功能 + 相关回目 + 相关概念 |
 | `concepts/` | 38 | 主题概念 | 概念说明 + 阅读视角 + 关键章节 |
 | `locations/` | 21 | 地点空间 | 空间说明 + 居住者/功能 + 相关章节 |
 | `poetry/` | 12 | 诗词曲文 | 文本位置 + 赏析 + 人物/主题关系 |
@@ -30,22 +30,22 @@ tags: [hongloumeng, meta, agent]
 | `background/` | 7 | 文化背景 | 制度介绍 + 小说对应 + 阅读视角 |
 | `families/` | 5 | 四大家族 | 谱系 + 关键人物 + 家族关系 |
 | `motifs-symbols/` | 6 | 意象物象 | 意象功能 + 叙事功能 + 关键章节 |
-| `maps/` | 7 | 图谱（含SVG） | 空间图 + 关系图 + 路线图 |
+| `maps/` | 6 | 图谱（含SVG） | 空间图 + 关系图 + 路线图 |
 | `timelines/` | 3 | 时间线 | 事件按时间排序 |
-| `queries/` | 8 | 索引/导航 | 按类别分组的全量链接表 |
+| `queries/` | 9 | 索引/导航 | 按类别分组的全量链接表 |
 | `outputs/` | 12 | 输出产品 | 导览 + 手册 + 阅读路线 |
 | `images/` | 26 | AI 插图 | 人物肖像16 + 场景图9 + 四季图1 |
 | `templates/` | 2 | 页面模板 | chapter-template, character-template |
 
-**总文件数：765（成品 Wiki Markdown，不含 `raw/`）**
+**总文件数：775（成品 Wiki Markdown，不含 `raw/`）**
 
 ## 2. 当前状态快照
 
 | 指标 | 值 |
 |------|---|
-| 成品 Wiki Markdown | 765 |
+| 成品 Wiki Markdown | 775 |
 | raw 原始文本 Markdown | 121（单独统计） |
-| 成品+raw 管理口径 | 886 |
+| 成品+raw 管理口径 | 896 |
 | 总字符页行数 | ~4500（93页） |
 | 断链 | 0（19个已在本轮回圈修复） |
 | 占位符 | 0 |
