@@ -491,6 +491,108 @@ def check_markdown_links(root: Path, product_md: list[Path]) -> tuple[list[Findi
     return findings, dict(stats)
 
 
+def chapter_number_from_path(path: Path) -> str | None:
+    m = re.search(r"第(\d{3})回\.md$", path.name)
+    if not m:
+        return None
+    return m.group(1)
+
+
+def chapter_numbers_in_text(text: str) -> set[str]:
+    return set(re.findall(r"第(\d{3})回", text))
+
+
+def resolve_event_target(raw_target: str, indexes: dict[str, object]) -> str | None:
+    status, detail = resolve_wikilink(raw_target, indexes)
+    if status != "ok":
+        return None
+    if detail.startswith("events/") and detail.endswith(".md"):
+        return detail
+    return None
+
+
+def check_chapter_key_event_links(
+    root: Path,
+    product_md: list[Path],
+    indexes: dict[str, object],
+) -> tuple[list[Finding], dict[str, int]]:
+    """检查章节页“关键事件”里的事件链接是否落在事件页声明的相关回目内。
+
+    这不是文学语义判断，只做一个低误报的定位一致性检查：
+    - 扫描 chapters/第xxx回.md 的 ## 关键事件 区块；
+    - 找出指向 events/*.md 的 wikilink；
+    - 反查事件页正文是否出现相同“第xxx回”标记。
+
+    若未来确有跨回过程型事件，应在事件页“相关回目/相关章节/原文锚点”
+    中显式标出对应回目，而不是让章节页链接到一个没有定位说明的事件页。
+    """
+
+    findings: list[Finding] = []
+    stats = Counter()
+    wikilink_re = re.compile(r"\[\[([^\]]+)\]\]")
+    event_chapter_cache: dict[str, set[str]] = {}
+
+    chapter_paths = [
+        p
+        for p in product_md
+        if rel(p, root).startswith("chapters/") and chapter_number_from_path(p) is not None
+    ]
+
+    for path in chapter_paths:
+        chapter_no = chapter_number_from_path(path)
+        if chapter_no is None:
+            continue
+        r = rel(path, root)
+        text = read_text(path)
+        in_key_events = False
+
+        for line_no, line in iter_non_code_lines(text):
+            if line.startswith("## "):
+                in_key_events = line.strip() == "## 关键事件"
+                continue
+            if not in_key_events:
+                continue
+            if not line.strip().startswith("- "):
+                continue
+
+            for match in wikilink_re.finditer(line):
+                raw_target = match.group(1)
+                event_rel = resolve_event_target(raw_target, indexes)
+                if event_rel is None:
+                    stats["non_event_or_unresolved_skipped"] += 1
+                    continue
+
+                stats["scanned"] += 1
+                if event_rel not in event_chapter_cache:
+                    event_path = root / event_rel
+                    if event_path.exists():
+                        event_chapter_cache[event_rel] = chapter_numbers_in_text(read_text(event_path))
+                    else:
+                        event_chapter_cache[event_rel] = set()
+
+                event_chapters = event_chapter_cache[event_rel]
+                if chapter_no in event_chapters:
+                    stats["ok"] += 1
+                    continue
+
+                stats["suspect"] += 1
+                chapter_label = f"第{chapter_no}回"
+                event_labels = ", ".join(f"第{n}回" for n in sorted(event_chapters)) or "未声明相关回目"
+                findings.append(
+                    Finding(
+                        "WARN",
+                        "chapter_key_event_link_unlocalized",
+                        r,
+                        line_no,
+                        f"{chapter_label} 关键事件链接到 {event_rel}，但事件页定位为 {event_labels}；请补事件页相关回目或移除误链",
+                    )
+                )
+
+    for key in ("scanned", "ok", "suspect", "non_event_or_unresolved_skipped"):
+        stats.setdefault(key, 0)
+    return findings, dict(stats)
+
+
 def frontmatter_scope(path: Path, root: Path) -> bool:
     r = rel(path, root)
     parts = Path(r).parts
@@ -731,6 +833,7 @@ def render_report(
             "解释",
             [
                 "- alias 类型 WARN 表示短名可通过 alias map 解析，但建议在 Phase 2 改成文件级链接，例如 [[characters/贾宝玉.md|宝玉]]。",
+                "- chapter_key_event_link_unlocalized 表示章节页“关键事件”链接到事件页，但该事件页没有声明对应回目；通常应补事件页定位或移除误链。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
                 "- 默认运行只生成报告；如需把结构问题作为闸门，请加 --strict。",
             ],
@@ -762,6 +865,7 @@ def main() -> int:
         ("frontmatter", lambda: check_frontmatter(root, product_md)),
         ("wikilinks", lambda: check_wikilinks(root, product_md, indexes)),
         ("markdown_links", lambda: check_markdown_links(root, product_md)),
+        ("chapter_key_event_links", lambda: check_chapter_key_event_links(root, product_md, indexes)),
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
