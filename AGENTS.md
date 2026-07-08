@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki Agent 操作手册
 created: 2026-05-02
-updated: 2026-05-03
+updated: 2026-07-08
 type: meta
 book: 红楼梦
 status: curated-v1
@@ -37,13 +37,15 @@ tags: [hongloumeng, meta, agent]
 | `images/` | 26 | AI 插图 | 人物肖像16 + 场景图9 + 四季图1 |
 | `templates/` | 2 | 页面模板 | chapter-template, character-template |
 
-**总文件数：765**
+**总文件数：765（成品 Wiki Markdown，不含 `raw/`）**
 
 ## 2. 当前状态快照
 
 | 指标 | 值 |
 |------|---|
-| 总 Markdown 文件 | 765 |
+| 成品 Wiki Markdown | 765 |
+| raw 原始文本 Markdown | 121（单独统计） |
+| 成品+raw 管理口径 | 886 |
 | 总字符页行数 | ~4500（93页） |
 | 断链 | 0（19个已在本轮回圈修复） |
 | 占位符 | 0 |
