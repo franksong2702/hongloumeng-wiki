@@ -699,6 +699,168 @@ def check_source_anchors(root: Path, product_md: list[Path]) -> tuple[list[Findi
     return findings, dict(stats)
 
 
+def source_anchor_paths(root: Path, product_md: list[Path]) -> dict[str, set[str]]:
+    """收集原文页中已经声明的 `^hlm-*` block anchor。
+
+    `check_source_anchors` 负责检查“锚点自身是否健康”；本索引用于另一类问题：
+    事件页/地图页等链接到 `texts/simplified/第xxx回.md#^hlm-*` 时，目标
+    block anchor 是否真的存在。
+    """
+
+    anchor_re = re.compile(r"\^hlm-[A-Za-z0-9_-]+")
+    anchors_by_path: dict[str, set[str]] = defaultdict(set)
+    source_paths = [
+        p
+        for p in product_md
+        if rel(p, root).startswith("texts/simplified/") and re.search(r"第\d{3}回\.md$", p.name)
+    ]
+    for path in source_paths:
+        r = rel(path, root)
+        anchors_by_path[r].update(anchor_re.findall(read_text(path)))
+    return anchors_by_path
+
+
+def normalize_source_anchor_link_target(raw_target: str) -> tuple[str, str] | None:
+    """从 wikilink/Markdown link target 中取出 `(file_path, ^hlm-anchor)`。
+
+    返回 None 表示该链接不是红楼梦原文 block anchor 链接。
+    """
+
+    target = raw_target.strip()
+    if "|" in target:
+        target = target.split("|", 1)[0].strip()
+    target = re.sub(r'\s+"[^"]*"\s*$', "", target)
+    target = re.sub(r"\s+'[^']*'\s*$", "", target)
+    target = unquote(target)
+    if "?" in target:
+        target = target.split("?", 1)[0]
+    if "#^hlm-" not in target:
+        return None
+    file_target, anchor = target.split("#", 1)
+    file_target = file_target.strip()
+    anchor = anchor.strip()
+    if not anchor.startswith("^hlm-"):
+        return None
+    if file_target.startswith(WIKI_PREFIX):
+        file_target = file_target[len(WIKI_PREFIX) :]
+    if file_target.startswith("/"):
+        file_target = file_target.lstrip("/")
+    return file_target, anchor
+
+
+def check_source_anchor_references(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """检查指向原文 block anchor 的链接是否真的能落到目标锚点。
+
+    Obsidian/Wiki 链接解析只确认 `texts/simplified/第xxx回.md` 存在并不够；
+    `#^hlm-*` 缺失时，读者仍然无法跳到正文现场。
+    """
+
+    findings: list[Finding] = []
+    stats = Counter()
+    anchors_by_path = source_anchor_paths(root, product_md)
+    wikilink_re = re.compile(r"\[\[([^\]]+)\]\]")
+    md_link_re = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+
+    for path in product_md:
+        r = rel(path, root)
+        text = read_text(path)
+        for line_no, line in iter_non_code_lines(text):
+            raw_targets: list[tuple[str, str]] = []
+            raw_targets.extend(("wikilink", match.group(1)) for match in wikilink_re.finditer(line))
+            raw_targets.extend(("markdown", match.group(1)) for match in md_link_re.finditer(line))
+
+            for link_kind, raw_target in raw_targets:
+                normalized = normalize_source_anchor_link_target(raw_target)
+                if normalized is None:
+                    continue
+                target_path, anchor = normalized
+                stats["scanned"] += 1
+                stats[f"kind:{link_kind}"] += 1
+
+                if target_path not in anchors_by_path:
+                    stats["target_file_missing"] += 1
+                    findings.append(
+                        Finding(
+                            "ERROR",
+                            "source_anchor_reference_target_missing",
+                            r,
+                            line_no,
+                            f"{raw_target} -> {target_path} 不存在或不是简体原文页",
+                        )
+                    )
+                    continue
+
+                if anchor not in anchors_by_path[target_path]:
+                    stats["anchor_missing"] += 1
+                    findings.append(
+                        Finding(
+                            "ERROR",
+                            "source_anchor_reference_missing",
+                            r,
+                            line_no,
+                            f"{raw_target} -> {target_path} 中不存在 {anchor}",
+                        )
+                    )
+                    continue
+
+                stats["ok"] += 1
+
+    for key in ("scanned", "ok", "anchor_missing", "target_file_missing", "kind:wikilink", "kind:markdown"):
+        stats.setdefault(key, 0)
+    return findings, dict(stats)
+
+
+def event_has_exact_source_anchor(text: str) -> bool:
+    return bool(re.search(r"texts/simplified/第\d{3}回\.md#\^hlm-[A-Za-z0-9_-]+", text))
+
+
+def check_event_source_anchor_coverage(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """检查事件页是否提供可直接跳到正文段落的原文锚点。
+
+    只链接到某一回导读/原文文件，对读者定位事件现场仍然不够；事件页至少应
+    提供一个 `texts/simplified/第xxx回.md#^hlm-*` 精确锚点。
+    """
+
+    findings: list[Finding] = []
+    stats = Counter()
+
+    for path in product_md:
+        r = rel(path, root)
+        if not r.startswith("events/"):
+            continue
+        text = read_text(path)
+        fields, _ = parse_frontmatter(text)
+        if fields.get("type") != "event":
+            continue
+
+        stats["scanned"] += 1
+        has_section = "## 原文锚点" in text
+        if has_section:
+            stats["has_source_anchor_section"] += 1
+        else:
+            stats["missing_source_anchor_section"] += 1
+
+        if event_has_exact_source_anchor(text):
+            stats["ok"] += 1
+            continue
+
+        stats["missing_exact_source_anchor"] += 1
+        severity = "WARN" if has_section else "ERROR"
+        findings.append(
+            Finding(
+                severity,
+                "event_source_anchor_missing",
+                r,
+                None,
+                "事件页缺少 texts/simplified/第xxx回.md#^hlm-* 精确正文锚点",
+            )
+        )
+
+    for key in ("scanned", "ok", "has_source_anchor_section", "missing_source_anchor_section", "missing_exact_source_anchor"):
+        stats.setdefault(key, 0)
+    return findings, dict(stats)
+
+
 def frontmatter_scope(path: Path, root: Path) -> bool:
     r = rel(path, root)
     parts = Path(r).parts
@@ -941,6 +1103,8 @@ def render_report(
                 "- alias 类型 WARN 表示短名可通过 alias map 解析，但建议在 Phase 2 改成文件级链接，例如 [[characters/贾宝玉.md|宝玉]]。",
                 "- chapter_key_event_link_unlocalized 表示章节页“关键事件”链接到事件页，但该事件页没有声明对应回目；通常应补事件页定位或移除误链。",
                 "- source_anchor_not_in_body/source_anchor_duplicate 表示原文 block anchor 不在小说正文段落或重复；这会导致事件页跳转不到真正正文现场，属于 ERROR。",
+                "- source_anchor_reference_missing 表示页面链接到了不存在的原文 block anchor；链接文件存在但无法精确跳转，属于 ERROR。",
+                "- event_source_anchor_missing 表示事件页没有提供 `texts/simplified/第xxx回.md#^hlm-*` 精确正文锚点；若已有“原文锚点”区块则先作为 WARN。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
                 "- 默认运行只生成报告；如需把结构问题作为闸门，请加 --strict。",
             ],
@@ -974,6 +1138,8 @@ def main() -> int:
         ("markdown_links", lambda: check_markdown_links(root, product_md)),
         ("chapter_key_event_links", lambda: check_chapter_key_event_links(root, product_md, indexes)),
         ("source_anchors", lambda: check_source_anchors(root, product_md)),
+        ("source_anchor_references", lambda: check_source_anchor_references(root, product_md)),
+        ("event_source_anchor_coverage", lambda: check_event_source_anchor_coverage(root, product_md)),
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
