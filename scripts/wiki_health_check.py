@@ -421,6 +421,44 @@ def check_wikilinks(
     return findings, dict(stats)
 
 
+def check_table_alias_wikilinks(root: Path, scan_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """禁止在 Markdown 表格行里使用带 alias 的 Obsidian wikilink。
+
+    `[[path|alias]]` 本身是合法 Obsidian 链接，但 Markdown 表格也用 `|` 分列；
+    把二者叠在一起时，Obsidian/Markdown 渲染可能把链接切碎，造成看似断链或点击异常。
+    需要 alias 链接时，优先改用编号列表或项目列表。
+    """
+    findings: list[Finding] = []
+    stats = Counter()
+    alias_wikilink_re = re.compile(r"\[\[[^\]]+\|[^\]]+\]\]")
+
+    for path in scan_md:
+        r = rel(path, root)
+        text = read_text(path)
+        for line_no, line in iter_non_code_lines(text):
+            stripped = line.lstrip()
+            if not stripped.startswith("|"):
+                continue
+            if stripped.count("|") < 2:
+                continue
+            stats["table_rows_scanned"] += 1
+            matches = alias_wikilink_re.findall(line)
+            if not matches:
+                continue
+            stats["alias_wikilinks_in_tables"] += len(matches)
+            findings.append(
+                Finding(
+                    "ERROR",
+                    "table_alias_wikilink",
+                    r,
+                    line_no,
+                    "Markdown 表格行内不要使用带 |alias 的 wikilink；改用列表或去掉 alias: "
+                    + "; ".join(matches[:3]),
+                )
+            )
+    return findings, dict(stats)
+
+
 def clean_markdown_link_target(target: str) -> str:
     target = target.strip()
     # 去掉可选 title：path "title"
@@ -1103,6 +1141,7 @@ def render_report(
             "解释",
             [
                 "- alias 类型 WARN 表示短名可通过 alias map 解析，但建议在 Phase 2 改成文件级链接，例如 [[characters/贾宝玉.md|宝玉]]。",
+                "- table_alias_wikilink 表示 Markdown 表格行里出现 `[[path|alias]]`；表格分隔符 `|` 会和 Obsidian alias 冲突，应用列表或去掉 alias。",
                 "- chapter_key_event_link_unlocalized 表示章节页“关键事件”链接到事件页，但该事件页没有声明对应回目；通常应补事件页定位或移除误链。",
                 "- source_anchor_not_in_body/source_anchor_duplicate 表示原文 block anchor 不在小说正文段落或重复；这会导致事件页跳转不到真正正文现场，属于 ERROR。",
                 "- source_anchor_reference_missing 表示页面链接到了不存在的原文 block anchor；链接文件存在但无法精确跳转，属于 ERROR。",
@@ -1137,6 +1176,7 @@ def main() -> int:
     checkers = [
         ("frontmatter", lambda: check_frontmatter(root, product_md)),
         ("wikilinks", lambda: check_wikilinks(root, product_md, indexes)),
+        ("table_alias_wikilinks", lambda: check_table_alias_wikilinks(root, product_md + maintenance_md)),
         ("markdown_links", lambda: check_markdown_links(root, product_md)),
         ("chapter_key_event_links", lambda: check_chapter_key_event_links(root, product_md, indexes)),
         ("source_anchors", lambda: check_source_anchors(root, product_md)),
