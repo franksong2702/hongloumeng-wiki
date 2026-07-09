@@ -98,15 +98,16 @@ tags: [hongloumeng, maintenance, cross-reference, phase-4a]
 
 ### 4.1 人物页新增结构
 
-建议在 `## 命运线` 之后、`## 关键章节` 之前，加入：
+建议在 `## 命运线` 之后、`## 关键章节` 之前，加入编号列表：
 
 ```md
 ## 主要事件线
 
-| 阶段 | 事件 | 回目/原文 | 对人物的意义 |
-|---|---|---|---|
-| 起点 | [[events/xxx.md|xxx]] | [[chapters/第xxx回.md|第xxx回]] | 一句话解释。 |
+1. **起点**：[[events/xxx.md|xxx]]（[[chapters/第xxx回.md|第xxx回]]）——一句话解释。
+2. **转折**：[[events/yyy.md|yyy]]（[[chapters/第yyy回.md|第yyy回]]）——一句话解释。
 ```
+
+注意：不要把 `[[path|alias]]` 放进 Markdown 表格。表格本身用 `|` 分列，容易和 Obsidian wikilink alias 的 `|` 冲突，导致渲染或点击异常。
 
 不同层级的人物控制不同长度：
 
@@ -119,15 +120,16 @@ tags: [hongloumeng, maintenance, cross-reference, phase-4a]
 
 ### 4.2 事件页新增结构
 
-对核心事件和多人事件，建议加入：
+对核心事件和多人事件，建议加入列表：
 
 ```md
 ## 涉及人物
 
-| 人物 | 在事件中的位置 | 这件事改变了什么 |
-|---|---|---|
-| [[characters/xxx.md|xxx]] | 主体 / 承受者 / 推动者 / 见证者 | 一句话。 |
+- [[characters/xxx.md|xxx]]：主体。这件事改变了什么。
+- [[characters/yyy.md|yyy]]：承受者。这件事改变了什么。
 ```
+
+如确实需要表格，应避免在表格单元格中直接使用带 alias 的 wikilink；优先改用列表，保证 Obsidian 点击稳定。
 
 角色建议统一为：
 
