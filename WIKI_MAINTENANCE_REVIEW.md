@@ -100,10 +100,11 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 ### MkDocs 构建边界（2026-07-10）
 
-- 修复 [[scripts/build_mkdocs.py]] 未跳过自身 `_mkdocs_build/` 输出目录的问题，避免构建产物被递归复制回输入；
-- 转换脚本成功生成 979 个文档，`mkdocs build`（非严格）返回 `exit 0`；本轮地点页、概念页和第041回锚点均存在于生成目录；
-- `mkdocs build --strict` 当前仍因 1218 条全站既有转换/链接告警而非零退出，主要来自历史短链接、原文锚点 `.md` 后缀转换和图片嵌入；这不是本轮空间页改写产生的新问题，不在本次小切片中顺手重构。
-- 非严格构建证据：`/tmp/hongloumeng_mkdocs_build_20260710.log`；生成目录：`_mkdocs_build/`（已由 `.gitignore` 排除）。
+- 已修复 [[scripts/build_mkdocs.py]] 的静态转换逻辑：跳过自身输出目录、raw/、模板和维护文档；把根目录路径、短名链接、图片链接与 `#^block-anchor` 统一解析为存在的相对目标；不会再把图片误写为 `.png.md`，也不会把 `.md` 错加到锚点末尾；
+- 对源文件实际引用的普通标题锚点，生成页会补兼容 id；历史 `#L33` 一类行号坐标没有稳定网页锚点，静态站只跳到对应原文页，不伪造一个必坏锚点；
+- 修正 [[redology/护官符与官场秩序研究综述.md]] 中两处 `hlg-004-hulu-an` 错拼为现存的 `hlm-004-hulu-an`；
+- 新增 [[scripts/mkdocs_build_check.py]]：先转换、再运行 `mkdocs build --strict`，并保存 `_mkdocs_build/mkdocs-strict-build.log`；当前转换 851 个读者站文件，严格构建返回 `exit 0`，MkDocs 链接/导航诊断为 0；
+- 构建证据：`_mkdocs_build/mkdocs-strict-build.log`（已由 `.gitignore` 排除）；源 Wiki 回归证据：`/tmp/hongloumeng_wiki_health_after_mkdocs_20260710.txt`（`ERROR 0 / WARN 0`）。
 
 ### Phase 0 / Phase 1：维护机制与机械修复
 

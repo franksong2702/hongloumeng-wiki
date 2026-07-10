@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki 维护机制
 created: 2026-07-08
-updated: 2026-07-08
+updated: 2026-07-10
 type: maintenance-guide
 book: 红楼梦
 status: active
@@ -81,7 +81,24 @@ python3 scripts/wiki_health_check.py --strict
 8. 按 `type` 分类的薄页检查；
 9. README / index / ROADMAP / AGENTS / 输出总评中的数量自描述是否漂移。
 
-## 5. 当前 alias map 起点
+## 5. 静态站严格构建闸门
+
+健康检查验证的是 Obsidian 源文件；发布前还要验证“转换成普通 Markdown 后，静态站的链接是否仍可用”。在 Wiki 根目录运行：
+
+```bash
+python3 scripts/mkdocs_build_check.py
+```
+
+该脚本会依次：
+
+1. 运行 `scripts/build_mkdocs.py`，在 `_mkdocs_build/docs/` 生成副本；
+2. 将 vault 根路径、短名链接、图片链接和 `#^block-anchor` 转成 MkDocs 可识别的相对链接；
+3. 执行 `mkdocs build --strict`；只要严格构建非零退出，整条命令就非零退出；
+4. 将转换与构建输出写入 `_mkdocs_build/mkdocs-strict-build.log`。
+
+边界：`raw/`、模板和维护文档不属于读者静态站，因此不参与这项构建。历史 `#L33` 这类行号坐标在静态站中没有稳定锚点，会保留“跳到原文页”的链接而不伪造锚点；正文精确定位仍应使用 `#^hlm-...` block anchor。
+
+## 6. 当前 alias map 起点
 
 Phase 2 前不要盲目批量改短名链接。先用健康检查报告确认短名数量，再按 alias map 统一转换。
 
@@ -104,7 +121,7 @@ Phase 2 前不要盲目批量改短名链接。先用健康检查报告确认短
 [[characters/贾宝玉.md|宝玉]]
 ```
 
-## 6. 维护阶段
+## 7. 维护阶段
 
 ### Phase 0：只读维护基础设施
 
@@ -142,7 +159,7 @@ Phase 2 前不要盲目批量改短名链接。先用健康检查报告确认短
 2. 优先补 sources、关系网络、章节抓手和主题分析；
 3. 不做全库统一文风清洗。
 
-## 7. Git 与发布边界
+## 8. Git 与发布边界
 
 维护前先查看：
 
@@ -157,7 +174,7 @@ git status --short
 - 当前策略（2026-07-08 Phase 1B-C）：`raw/` 仅作为当前存在的原始文本层在文档和健康检查中单独统计；本轮不纳入 Git、不新增 `.gitignore`、不移动/删除 `raw/`；
 - 未确认前不要部署 GitHub Pages，不要启用自动任务。
 
-## 8. 完成报告模板
+## 9. 完成报告模板
 
 每阶段完成后使用：
 
