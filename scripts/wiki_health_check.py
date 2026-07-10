@@ -197,6 +197,52 @@ RELEASE_LOG_PATHS = [
 
 RELEASE_LOG_DATE_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})(?:[｜：:]|\s)")
 
+# 这四页曾以几十个平铺回目替代空间叙事；它们是地点页的阅读体验基线。
+LOCATION_READER_HUBS = {
+    "locations/怡红院.md",
+    "locations/潇湘馆.md",
+    "locations/宁国府.md",
+    "locations/栊翠庵.md",
+}
+LOCATION_READER_HEADINGS = (
+    "## 空间定位",
+    "## 谁在这里相互作用",
+    "## 关键事件现场",
+    "## 推荐回读",
+    "## 继续阅读",
+)
+
+RELATIONSHIP_GUIDE_DOC = "outputs/人物关系阅读指南.md"
+RELATIONSHIP_GUIDE_HEADINGS = (
+    "## 一、宝黛钗：真情、婚姻与不可兼得",
+    "## 二、荣国府内宅：长辈授权、管家执行与婚姻冲突",
+    "## 三、女儿世界：居所、照护与主仆制度",
+    "## 四、宁国府：亲属网络与败相先现",
+    "## 五、府外关系：家族边界从哪里被看见",
+)
+RELATIONSHIP_HUBS = {
+    "characters/贾宝玉.md",
+    "characters/林黛玉.md",
+    "characters/薛宝钗.md",
+    "characters/贾母.md",
+    "characters/王夫人.md",
+    "characters/贾政.md",
+    "characters/王熙凤.md",
+    "characters/贾琏.md",
+    "characters/平儿.md",
+    "characters/袭人.md",
+    "characters/晴雯.md",
+    "characters/紫鹃.md",
+    "characters/贾探春.md",
+    "characters/李纨.md",
+    "characters/贾珍.md",
+    "characters/秦可卿.md",
+    "characters/尤氏.md",
+    "characters/贾蓉.md",
+    "characters/薛姨妈.md",
+    "characters/薛蟠.md",
+}
+
 
 @dataclass
 class Finding:
@@ -996,6 +1042,9 @@ def check_thin_pages(root: Path, product_md: list[Path]) -> tuple[list[Finding],
         parts = Path(r).parts
         if parts and parts[0] in {"templates"}:
             continue
+        # 人物关系指南以枢纽覆盖和双向入口作为专用质量标准，行数阈值不适用。
+        if r == RELATIONSHIP_GUIDE_DOC:
+            continue
         if path.name in {"README.md", "log.md", "AGENTS.md", "SCHEMA.md", "ROADMAP.md", "START_HERE.md", "index.md"}:
             continue
         text = read_text(path)
@@ -1019,6 +1068,146 @@ def check_thin_pages(root: Path, product_md: list[Path]) -> tuple[list[Finding],
                 )
             )
     stats.update({f"thin:{k}": v for k, v in thin_by_type.items()})
+    return findings, dict(stats)
+
+
+def section_body(text: str, heading: str) -> str:
+    """取一个二级标题的正文，不把后续二级标题误算进来。"""
+    start = text.find(heading)
+    if start < 0:
+        return ""
+    body_start = start + len(heading)
+    next_heading = re.search(r"^##\s+", text[body_start:], re.M)
+    if next_heading is None:
+        return text[body_start:]
+    return text[body_start : body_start + next_heading.start()]
+
+
+def wikilink_targets(text: str) -> set[str]:
+    return {
+        normalize_wiki_target(match.group(1))
+        for match in re.finditer(r"\[\[([^\]]+)\]\]", text)
+    }
+
+
+def check_location_reader_structure(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """防止地点页重新退化为无说明的长回目清单。"""
+    findings: list[Finding] = []
+    stats = Counter()
+
+    for path in product_md:
+        r = rel(path, root)
+        if not r.startswith("locations/"):
+            continue
+        text = read_text(path)
+        fields, _ = parse_frontmatter(text)
+        if fields.get("type") != "location":
+            continue
+        stats["scanned"] += 1
+        page_ok = True
+
+        related_chapters = {
+            target
+            for target in wikilink_targets(section_body(text, "## 相关章节"))
+            if re.fullmatch(r"chapters/第\d{3}回\.md", target)
+        }
+        stats["flat_chapter_links"] += len(related_chapters)
+        if len(related_chapters) > 8:
+            findings.append(
+                Finding(
+                    "ERROR",
+                    "location_flat_chapter_list",
+                    r,
+                    None,
+                    f"“相关章节”平铺 {len(related_chapters)} 回；应改为关键事件现场与推荐回读",
+                )
+            )
+            page_ok = False
+
+        if r not in LOCATION_READER_HUBS:
+            if page_ok:
+                stats["ok"] += 1
+            continue
+
+        for heading in LOCATION_READER_HEADINGS:
+            if heading not in text:
+                findings.append(Finding("ERROR", "location_reader_structure_missing", r, None, f"缺少 {heading}"))
+                page_ok = False
+
+        event_targets = {
+            target
+            for target in wikilink_targets(section_body(text, "## 关键事件现场"))
+            if target.startswith("events/") and target.endswith(".md")
+        }
+        chapter_targets = {
+            target
+            for target in wikilink_targets(section_body(text, "## 推荐回读"))
+            if re.fullmatch(r"chapters/第\d{3}回\.md", target)
+        }
+        stats["hub_event_links"] += len(event_targets)
+        stats["hub_recommended_chapters"] += len(chapter_targets)
+        if len(event_targets) < 3:
+            findings.append(Finding("ERROR", "location_reader_events_thin", r, None, f"关键事件现场仅 {len(event_targets)} 条，应至少 3 条"))
+            page_ok = False
+        if len(chapter_targets) < 2:
+            findings.append(Finding("ERROR", "location_reader_recommended_chapters_thin", r, None, f"推荐回读仅 {len(chapter_targets)} 回，应至少 2 回"))
+            page_ok = False
+
+        if page_ok:
+            stats["ok"] += 1
+
+    return findings, dict(stats)
+
+
+def check_relationship_reading_surface(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """保持人物关系指南与首批关系枢纽人物页之间的双向阅读入口。"""
+    findings: list[Finding] = []
+    stats = Counter()
+    product_by_rel = {rel(path, root): path for path in product_md}
+    guide = product_by_rel.get(RELATIONSHIP_GUIDE_DOC)
+    if guide is None:
+        findings.append(Finding("ERROR", "relationship_guide_missing", RELATIONSHIP_GUIDE_DOC, None, "缺少人物关系阅读指南"))
+        return findings, dict(stats)
+
+    guide_text = read_text(guide)
+    guide_fields, _ = parse_frontmatter(guide_text)
+    stats["guide_scanned"] += 1
+    if guide_fields.get("type") != "output":
+        findings.append(Finding("ERROR", "relationship_guide_type", RELATIONSHIP_GUIDE_DOC, 1, "人物关系阅读指南的 type 应为 output"))
+    missing_guide_headings = [heading for heading in RELATIONSHIP_GUIDE_HEADINGS if heading not in guide_text]
+    if missing_guide_headings:
+        findings.append(Finding("ERROR", "relationship_guide_sections_missing", RELATIONSHIP_GUIDE_DOC, None, f"缺少关系主线: {missing_guide_headings}"))
+    guide_targets = wikilink_targets(guide_text)
+    missing_hubs_in_guide = sorted(RELATIONSHIP_HUBS - guide_targets)
+    if missing_hubs_in_guide:
+        findings.append(Finding("ERROR", "relationship_guide_hubs_missing", RELATIONSHIP_GUIDE_DOC, None, f"未覆盖关系枢纽: {missing_hubs_in_guide}"))
+
+    for hub_rel in sorted(RELATIONSHIP_HUBS):
+        stats["hub_scanned"] += 1
+        path = product_by_rel.get(hub_rel)
+        if path is None:
+            findings.append(Finding("ERROR", "relationship_hub_missing", hub_rel, None, "关系枢纽人物页不存在"))
+            continue
+        text = read_text(path)
+        fields, _ = parse_frontmatter(text)
+        if fields.get("type") != "character":
+            findings.append(Finding("ERROR", "relationship_hub_type", hub_rel, 1, "关系枢纽应为 character 页面"))
+            continue
+        body = section_body(text, "## 关系阅读")
+        if not body:
+            findings.append(Finding("ERROR", "relationship_hub_section_missing", hub_rel, None, "缺少 ## 关系阅读"))
+            continue
+        targets = wikilink_targets(body)
+        character_targets = {target for target in targets if target.startswith("characters/") and target.endswith(".md")}
+        if RELATIONSHIP_GUIDE_DOC not in targets:
+            findings.append(Finding("ERROR", "relationship_hub_guide_missing", hub_rel, None, "关系阅读区块未回链人物关系阅读指南"))
+        if len(character_targets) < 3:
+            findings.append(Finding("ERROR", "relationship_hub_links_thin", hub_rel, None, f"关系阅读区块仅链接 {len(character_targets)} 名人物，应至少 3 名"))
+        else:
+            stats["hub_with_three_character_links"] += 1
+
+    if not findings:
+        stats["ok"] += 1
     return findings, dict(stats)
 
 
@@ -1405,6 +1594,9 @@ def render_report(
                 "- source_anchor_reference_missing 表示页面链接到了不存在的原文 block anchor；链接文件存在但无法精确跳转，属于 ERROR。",
                 "- event_source_anchor_missing 表示事件页没有提供 `texts/simplified/第xxx回.md#^hlm-*` 精确正文锚点；若已有“原文锚点”区块则先作为 WARN。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
+                "- location_flat_chapter_list 表示地点页把超过 8 个回目平铺为“相关章节”；应改为有解释的关键事件现场和推荐回读。",
+                "- location_reader_* 表示怡红院、潇湘馆、宁国府、栊翠庵缺少既定的空间阅读结构或关键入口。",
+                "- relationship_* 表示人物关系阅读指南或首批关系枢纽人物页缺少双向、可点击的人物关系入口。",
                 "- release_log_stale/release_log_missing_for_worktree_change 表示读者可见内容或发布机制已经变更，但 log.md 未在同一发布批次中更新，属于 ERROR。",
                 "- 默认运行只生成报告；如需把结构问题作为闸门，请加 --strict。",
             ],
@@ -1443,6 +1635,8 @@ def main() -> int:
         ("event_source_anchor_coverage", lambda: check_event_source_anchor_coverage(root, product_md)),
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
+        ("location_reader_structure", lambda: check_location_reader_structure(root, product_md)),
+        ("relationship_reading_surface", lambda: check_relationship_reading_surface(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
         ("release_log", lambda: check_release_log(root)),
         ("governance_snapshots", lambda: check_governance_snapshots(root)),

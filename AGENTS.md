@@ -33,11 +33,11 @@ tags: [hongloumeng, meta, agent]
 | `maps/` | 6 | 图谱（含SVG） | 空间图 + 关系图 + 路线图 |
 | `timelines/` | 3 | 时间线 | 事件按时间排序 |
 | `queries/` | 9 | 索引/导航 | 按类别分组的全量链接表 |
-| `outputs/` | 13 | 输出产品 | 导览 + 手册 + 阅读路线 + 维护审查 |
+| `outputs/` | 14 | 输出产品 | 导览 + 手册 + 阅读路线 + 维护审查 |
 | `images/` | 26 | AI 插图 | 人物肖像16 + 场景图9 + 四季图1 |
 | `templates/` | 2 | 页面模板 | chapter-template, character-template |
 
-**总文件数：828（成品 Wiki Markdown，不含 `raw/`）**
+**总文件数：829（成品 Wiki Markdown，不含 `raw/`）**
 
 ## 2. 当前状态快照
 

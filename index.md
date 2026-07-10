@@ -20,7 +20,7 @@ tags: [book-wiki, 红楼梦, index]
 - 12 首诗词已全部接入研究；4 首短诗（开篇诗、枉凝眉、满纸荒唐言、螃蟹咏）已 enrich。
 - 7 个 background 页全部 curated-v3（含清代家族制度）。
 - 双链缺失为 0；禁止空泛句为 0；核心解释层薄页已清零。
-- Phase 0~7 全部完成；研究型 v2 重编译已完成；21 个红学家页全部扩写为 70+ 行；总文件数 828（成品 Wiki Markdown，不含 `raw/` 原始文本层；`raw/` 121，成品+raw 管理口径 949）。
+- Phase 0~7 全部完成；研究型 v2 重编译已完成；21 个红学家页全部扩写为 70+ 行；总文件数 829（成品 Wiki Markdown，不含 `raw/` 原始文本层；`raw/` 121，成品+raw 管理口径 950）。
 - 26 张 AI 生成插图（16 人物肖像 + 1 四季图 + 9 场景图），嵌入对应人物页、原文页和事件页。
 - 繁简双版本原文已入库，Wiki 自包含。
 - 新增 MkDocs 站点：[franksong2702.github.io/hongloumeng-wiki](https://franksong2702.github.io/hongloumeng-wiki/)（构建时转换，本地文件不变）。

@@ -449,6 +449,7 @@ def generate_nav(docs_root):
         "outputs/红楼梦主题导读.md",
         "outputs/红学争议导览.md",
         "outputs/大观园空间阅读手册.md",
+        "outputs/人物关系阅读指南.md",
     }
     nav = [
         {
@@ -464,6 +465,7 @@ def generate_nav(docs_root):
             "人物与情节": [
                 require_nav_page("人物索引", "queries/人物索引.md", docs_root),
                 require_nav_page("事件索引", "queries/事件索引.md", docs_root),
+                require_nav_page("人物关系阅读指南", "outputs/人物关系阅读指南.md", docs_root),
                 require_nav_page("人物手册", "outputs/红楼梦人物手册.md", docs_root),
                 require_nav_page("金陵十二钗手册", "outputs/金陵十二钗研究手册.md", docs_root),
                 require_nav_page("人物关系图", "maps/人物关系图.md", docs_root),
