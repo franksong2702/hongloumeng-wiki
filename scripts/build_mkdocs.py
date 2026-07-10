@@ -49,6 +49,7 @@ SKIP = {
     "AGENTS.md",
     ".obsidian",
     ".git",
+    "_mkdocs_build",
 }
 
 

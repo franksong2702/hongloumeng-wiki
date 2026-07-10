@@ -14,7 +14,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 > 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与六次小专题端到端抽查。
+> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与七次小专题端到端抽查。
 
 ## 1. 一句话结论
 
@@ -43,7 +43,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 检查项 | 结果 |
 |---|---:|
-| wikilinks | ok=13644, scanned=13644 |
+| wikilinks | ok=13607, scanned=13607 |
 | source_anchor_references | ok=891, scanned=891 |
 | event_source_anchor_coverage | ok=181, scanned=181 |
 | source_anchors | duplicate=0, body=292 |
@@ -88,6 +88,22 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - 将 [[characters/板儿.md]] 升级为“第006回受助—第041回连接巧姐线”的两节点短事件线；
 - 将 [[characters/刘姥姥.md]] 与 [[characters/巧姐.md]] 的主要事件线接入该节点，并补齐 [[events/贾芸等谋卖巧姐.md]] 对刘姥姥、平儿的反向链接；
 - 明确保留 [[characters/狗儿.md]] 为第006回的单点家庭动机节点，不把他误写成第041回或后期救援的参与者。
+
+### Phase 4E：人物—事件—地点—概念阅读路径补强
+
+完成内容：
+
+- 将 [[PHASE_4A_CROSS_REFERENCE_ARCHITECTURE.md]] 改为“初始历史诊断 + 当前实施状态”，避免把已完成的人物线试点继续当作待办；
+- 为 [[characters/王熙凤.md]] 新增不干扰其权力主线的巧姐因果支线，并将 [[characters/平儿.md]] 的后期节点收束到救巧姐行动；
+- 重构 [[locations/荣国府.md]] 与 [[locations/大观园.md]]：删除无解释的长回目清单，改用空间定位、叙事路线、关键事件现场和推荐回读；
+- 为 [[concepts/人情往来.md]]、[[concepts/家族衰败.md]] 增加“文本证据事件”，把抽象概念接回可定位的事件现场。
+
+### MkDocs 构建边界（2026-07-10）
+
+- 修复 [[scripts/build_mkdocs.py]] 未跳过自身 `_mkdocs_build/` 输出目录的问题，避免构建产物被递归复制回输入；
+- 转换脚本成功生成 979 个文档，`mkdocs build`（非严格）返回 `exit 0`；本轮地点页、概念页和第041回锚点均存在于生成目录；
+- `mkdocs build --strict` 当前仍因 1218 条全站既有转换/链接告警而非零退出，主要来自历史短链接、原文锚点 `.md` 后缀转换和图片嵌入；这不是本轮空间页改写产生的新问题，不在本次小切片中顺手重构。
+- 非严格构建证据：`/tmp/hongloumeng_mkdocs_build_20260710.log`；生成目录：`_mkdocs_build/`（已由 `.gitignore` 排除）。
 
 ### Phase 0 / Phase 1：维护机制与机械修复
 
