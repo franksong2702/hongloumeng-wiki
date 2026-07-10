@@ -22,6 +22,7 @@ import sys
 
 VAULT_PREFIX = "02_Learn/08_book-wikis/红楼梦"
 CHAR_LINK_RE = re.compile(r"02_Learn/08_book-wikis/红楼梦/characters/([^\]|#]+)\.md")
+CURRENT_BASELINE = (106, 64, 19, 23)
 
 
 def read_title(path: Path) -> str:
@@ -107,7 +108,7 @@ def main() -> int:
         Path(args.json_output).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.strict_current:
-        expected = (106, 62, 17, 27)
+        expected = CURRENT_BASELINE
         actual = (data["total_character_files"], len(with_line), len(linked_missing), len(zero_missing))
         if actual != expected:
             print(f"STRICT_CURRENT_MISMATCH expected={expected} actual={actual}", file=sys.stderr)

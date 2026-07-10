@@ -14,7 +14,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 > 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与三次小专题端到端抽查。
+> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与五次小专题端到端抽查。
 
 ## 1. 一句话结论
 
@@ -43,14 +43,14 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 检查项 | 结果 |
 |---|---:|
-| wikilinks | ok=13603, scanned=13603 |
+| wikilinks | ok=13619, scanned=13619 |
 | source_anchor_references | ok=890, scanned=890 |
 | event_source_anchor_coverage | ok=180, scanned=180 |
 | source_anchors | duplicate=0, body=291 |
 | chapter_key_event_links | ok=209, suspect=0 |
 | thin_pages | scanned=556，无 thin WARN |
 
-证据文件：`/tmp/hongloumeng_health_linhai_final.md`。
+证据文件：`/tmp/hongloumeng_health_character_audit_final.md`。
 
 ## 3. 本轮维护完成范围
 
@@ -62,6 +62,22 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - 为三段正文分别补语义锚点，事件页和人物页可直接跳转原文；
 - 将 [[characters/林如海.md]] 从单一事件反链人物升级为四节点主要事件线；
 - 补齐 [[events/贾雨村起复.md]]、[[events/黛玉进贾府.md]] 对林如海的反向链接，并更新反链脚本基线。
+
+### 孙绍祖—迎春婚姻悲剧阅读路径补强
+
+完成内容：
+
+- 复核既有第005、079、080、109回锚点，确认预告、许嫁、受辱、死亡四层现场均已可定位；
+- 补齐 [[events/迎春误嫁.md]] 对 [[characters/孙绍祖.md]] 的反向链接；
+- 不新建重复事件，而是用既有的“迎春误嫁—迎春之死”建立孙绍祖两节点短线。
+
+### 人物事件线全量漏链审查
+
+完成内容：
+
+- 审查其余 43 名尚未有主要事件线的人物，区分真正漏链、从属提及和不适用普通小说事件线三类；
+- 将 [[characters/潘又安.md]] 接入“鸳鸯撞见司棋私情—司棋被逐”两节点短线；
+- 为 [[characters/狗儿.md]]、[[characters/板儿.md]]、[[characters/金寡妇.md]]、[[characters/贾代儒.md]] 补直接事件入口，但不为单点背景人物制造主线。
 
 ### Phase 0 / Phase 1：维护机制与机械修复
 
@@ -174,7 +190,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - 重点补“正文定位 / 阅读入口 / 对读路线”，避免为清 WARN 写空泛赏析；
 - 最终将 `thin_page_by_type` WARN 清零。
 
-## 4. 当前 Git 状态说明
+## 4. Phase 3Q 前的历史 Git 状态说明
 
 进入 Phase 3Q 前的状态：
 
@@ -185,8 +201,12 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 解释：
 
-- `WIKI_MAINTENANCE_REVIEW.md`：原为未跟踪的初始审查草稿；本文件已更新为当前收尾报告，建议作为维护文档纳入 Git。
+- `WIKI_MAINTENANCE_REVIEW.md`：原为未跟踪的初始审查草稿；该历史状态发生在本文件纳入 Git 之前。
 - `raw/`：仍是未跟踪原始文本层。本轮策略是不纳入 Git、不移动、不删除、不新增 `.gitignore`。未来如要处理，应单独开一阶段讨论。
+
+### 当前 Git 边界
+
+截至 2026-07-10，本维护报告已随 `372eb84 Audit Lin Ruhai reading path` 纳入 Git；工作区唯一保留的未跟踪项是 `raw/`。该目录继续按既定策略保留在版本控制之外。
 
 ## 5. 后续维护方法
 
@@ -261,3 +281,9 @@ Git 状态：M README.md；?? raw/
 首个样例为[[02_Learn/08_book-wikis/红楼梦/events/宝玉挨打.md|宝玉挨打]]：链路按“第028回远因—第032回近因—第033回本事—第034回余波”组织，并把蒋玉菡、贾母、林黛玉等必要人物入口接回事件现场。后续专题可复用同一套检查顺序，但不能机械复制相同人物数量或回目数量。
 
 第二个样例为“小红—贾芸—凤姐”链：从[[02_Learn/08_book-wikis/红楼梦/characters/小红.md|小红]]与[[02_Learn/08_book-wikis/红楼梦/characters/贾芸.md|贾芸]]两个人物入口，接到[[02_Learn/08_book-wikis/红楼梦/events/凤姐赏识小红.md|凤姐赏识小红]]、[[02_Learn/08_book-wikis/红楼梦/events/贾芸再求凤姐办差.md|贾芸再求凤姐办差]]和[[02_Learn/08_book-wikis/红楼梦/events/贾芸等谋卖巧姐.md|贾芸等谋卖巧姐]]。该样例同时证明：专题审查需要区分前八十回与现行后四十回，不能为了制造平滑人物弧线而抹掉文本层次。
+
+第三个样例为“林如海—黛玉入府”链：从[[02_Learn/08_book-wikis/红楼梦/characters/林如海.md|林如海]]进入[[02_Learn/08_book-wikis/红楼梦/events/黛玉丧母.md|黛玉丧母]]、[[02_Learn/08_book-wikis/红楼梦/events/贾雨村起复.md|贾雨村起复]]、[[02_Learn/08_book-wikis/红楼梦/events/黛玉进贾府.md|黛玉进贾府]]和[[02_Learn/08_book-wikis/红楼梦/events/林如海病逝.md|林如海病逝]]。该样例要求区分第012回病重、第014回死亡确认和第016回安葬返京，不能把后果回目误写成事件发生回目。
+
+第四个样例为“孙绍祖—迎春婚姻悲剧”链：不新增事件，只补齐[[02_Learn/08_book-wikis/红楼梦/events/迎春误嫁.md|迎春误嫁]]对[[02_Learn/08_book-wikis/红楼梦/characters/孙绍祖.md|孙绍祖]]的反链，再与已有的[[02_Learn/08_book-wikis/红楼梦/events/迎春之死.md|迎春之死]]组成因果短线。该样例说明：先查已有事件是否已覆盖情节；只有现有节点不够承载阅读路径时，才新建事件页。
+
+第五个样例为“潘又安—司棋私情”链：[[02_Learn/08_book-wikis/红楼梦/events/鸳鸯撞见司棋私情.md|鸳鸯撞见司棋私情]]写秘密被发现与潘又安逃走，[[02_Learn/08_book-wikis/红楼梦/events/司棋被逐.md|司棋被逐]]写信物成为证据后的家法处置。该样例说明：人物页已有多个相关链接不等于已具备人物线；仍须补齐事件页反链并确认两个节点构成因果，才能升级。

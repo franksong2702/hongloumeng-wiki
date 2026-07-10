@@ -167,6 +167,8 @@ SELF_DESCRIPTION_DOCS = [
     "outputs/红楼梦编译总评.md",
 ]
 
+GOVERNANCE_SNAPSHOT_DOC = "outputs/人物事件线剩余人物审查.md"
+
 
 @dataclass
 class Finding:
@@ -1061,6 +1063,146 @@ def check_self_description(
     return findings, dict(stats)
 
 
+def parse_int_tuple(raw: str, expected_length: int) -> tuple[int, ...] | None:
+    """Parse a compact frontmatter list such as ``[106, 62, 17, 27]``."""
+
+    value = raw.strip()
+    if not (value.startswith("[") and value.endswith("]")):
+        return None
+    try:
+        items = tuple(int(item.strip()) for item in value[1:-1].split(",") if item.strip())
+    except ValueError:
+        return None
+    return items if len(items) == expected_length else None
+
+
+def check_governance_snapshots(root: Path) -> tuple[list[Finding], dict[str, int]]:
+    """Keep the human-readable character-line review in sync with live scripts.
+
+    The review page carries the current baseline in frontmatter and repeats it in
+    prose for readers. This check validates both surfaces against the read-only
+    character-line scripts, so a later event-link fix cannot silently leave an
+    old heading or ``--strict-current`` explanation behind.
+    """
+
+    findings: list[Finding] = []
+    stats = Counter()
+    path = root / GOVERNANCE_SNAPSHOT_DOC
+    if not path.exists():
+        findings.append(Finding("ERROR", "governance_snapshot_missing", GOVERNANCE_SNAPSHOT_DOC, None, "缺少人物事件线当前快照文档"))
+        return findings, dict(stats)
+
+    text = read_text(path)
+    fields, _ = parse_frontmatter(text)
+    documented_line = parse_int_tuple(fields.get("character_event_line_baseline", ""), 4)
+    documented_reverse = parse_int_tuple(fields.get("character_event_reverse_baseline", ""), 3)
+
+    try:
+        from character_event_line_review import CURRENT_BASELINE as line_script_baseline
+        from character_event_line_review import classify as classify_character_event_lines
+        from character_event_reverse_link_check import CURRENT_BASELINE as reverse_script_baseline
+        from character_event_reverse_link_check import check_reverse_links
+    except ImportError as exc:
+        findings.append(Finding("ERROR", "governance_snapshot_import", GOVERNANCE_SNAPSHOT_DOC, None, f"无法导入人物线检查脚本: {exc}"))
+        return findings, dict(stats)
+
+    line_data = classify_character_event_lines(root)
+    live_line = (
+        line_data["total_character_files"],
+        len(line_data["with_major_event_line"]),
+        len(line_data["event_linked_without_major_event_line"]),
+        len(line_data["zero_event_links_without_major_event_line"]),
+    )
+    reverse_data = check_reverse_links(root)
+    live_reverse = (
+        reverse_data["scanned_characters"],
+        reverse_data["scanned_event_links"],
+        len(reverse_data["gaps"]),
+    )
+
+    checks = [
+        ("character_event_line_baseline", documented_line, tuple(line_script_baseline), live_line),
+        ("character_event_reverse_baseline", documented_reverse, tuple(reverse_script_baseline), live_reverse),
+    ]
+    for field_name, documented, script_baseline, live in checks:
+        stats["scanned"] += 1
+        if documented is None:
+            findings.append(Finding("ERROR", "governance_snapshot_format", GOVERNANCE_SNAPSHOT_DOC, 1, f"frontmatter {field_name} 应为整数列表"))
+            continue
+        if documented != script_baseline:
+            findings.append(Finding("ERROR", "governance_snapshot_script_mismatch", GOVERNANCE_SNAPSHOT_DOC, 1, f"{field_name}={documented}，脚本基线={script_baseline}"))
+        if documented != live:
+            findings.append(Finding("ERROR", "governance_snapshot_live_mismatch", GOVERNANCE_SNAPSHOT_DOC, 1, f"{field_name}={documented}，实时统计={live}"))
+        if documented == script_baseline == live:
+            stats["ok"] += 1
+
+    summary_patterns = [
+        ("人物页总数", r"- 人物页总数：(\d+)", documented_line[0] if documented_line else None),
+        ("主要事件线人数", r"- 已有 `## 主要事件线`：(\d+)", documented_line[1] if documented_line else None),
+        ("单点反链人数", r"- 还有事件页反链、但暂不补主要事件线：(\d+)", documented_line[2] if documented_line else None),
+        ("零反链人数", r"- 当前没有事件页反链、暂不补主要事件线：(\d+)", documented_line[3] if documented_line else None),
+        ("单点分组标题", r"^## 暂不补：有事件页反链但只有单点的 (\d+) 人$", documented_line[2] if documented_line else None),
+        ("反链闸门", r"当前反链闸门：已有主要事件线的 (\d+) 人物，共 (\d+) 条人物线事件链接，事件页反链缺口为 (\d+)", documented_reverse),
+    ]
+    for label, pattern, expected in summary_patterns:
+        stats["prose_scanned"] += 1
+        match = re.search(pattern, text, re.M)
+        if match is None or expected is None:
+            findings.append(Finding("ERROR", "governance_snapshot_prose_missing", GOVERNANCE_SNAPSHOT_DOC, None, f"缺少或无法解析{label}"))
+            continue
+        actual = tuple(int(value) for value in match.groups())
+        expected_tuple = expected if isinstance(expected, tuple) else (expected,)
+        if actual != expected_tuple:
+            findings.append(Finding("ERROR", "governance_snapshot_prose_mismatch", GOVERNANCE_SNAPSHOT_DOC, None, f"{label}={actual}，应为{expected_tuple}"))
+            continue
+        stats["prose_ok"] += 1
+
+    expected_single_names = {
+        row["name"] for row in line_data["event_linked_without_major_event_line"]
+    }
+    expected_zero_names = {
+        row["name"] for row in line_data["zero_event_links_without_major_event_line"]
+    }
+    single_section = re.search(
+        r"## 暂不补：有事件页反链但只有单点的 \d+ 人\n(.*?)(?=\n## 暂不补：当前零事件反链)",
+        text,
+        re.S,
+    )
+    zero_section = re.search(
+        r"## 暂不补：当前零事件反链的 \d+ 人\n(.*?)(?=\n## 后续维护闸门)",
+        text,
+        re.S,
+    )
+    if single_section is None:
+        findings.append(Finding("ERROR", "governance_snapshot_member_section_missing", GOVERNANCE_SNAPSHOT_DOC, None, "缺少单点反链人物表"))
+    else:
+        documented_single_names = {
+            match.group(1).strip()
+            for match in re.finditer(r"^\|\s*([^|]+?)\s*\|", single_section.group(1), re.M)
+            if match.group(1).strip() not in {"人物", "---"}
+        }
+        stats["member_lists_scanned"] += 1
+        if documented_single_names != expected_single_names:
+            findings.append(Finding("ERROR", "governance_snapshot_member_mismatch", GOVERNANCE_SNAPSHOT_DOC, None, f"单点反链人物表与实时结果不一致；缺少={sorted(expected_single_names - documented_single_names)}，多出={sorted(documented_single_names - expected_single_names)}"))
+        else:
+            stats["member_lists_ok"] += 1
+
+    if zero_section is None:
+        findings.append(Finding("ERROR", "governance_snapshot_member_section_missing", GOVERNANCE_SNAPSHOT_DOC, None, "缺少零反链人物名单"))
+    else:
+        documented_zero_names = {
+            match.group(1).strip()
+            for match in re.finditer(r"^-\s+([^\n]+)$", zero_section.group(1), re.M)
+        }
+        stats["member_lists_scanned"] += 1
+        if documented_zero_names != expected_zero_names:
+            findings.append(Finding("ERROR", "governance_snapshot_member_mismatch", GOVERNANCE_SNAPSHOT_DOC, None, f"零反链人物名单与实时结果不一致；缺少={sorted(expected_zero_names - documented_zero_names)}，多出={sorted(documented_zero_names - expected_zero_names)}"))
+        else:
+            stats["member_lists_ok"] += 1
+
+    return findings, dict(stats)
+
+
 def render_section(title: str, lines: list[str]) -> list[str]:
     out = [f"\n## {title}"]
     out.extend(lines or ["无"])
@@ -1185,6 +1327,7 @@ def main() -> int:
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
+        ("governance_snapshots", lambda: check_governance_snapshots(root)),
     ]
 
     for name, checker in checkers:
