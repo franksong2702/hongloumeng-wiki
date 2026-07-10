@@ -98,7 +98,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default=".", help="Wiki root directory")
     parser.add_argument("--json-output", help="Optional JSON output path")
-    parser.add_argument("--strict-current", action="store_true", help="Assert current Phase 4D expected counts")
+    parser.add_argument("--strict-current", action="store_true", help="Assert the current curated reverse-link baseline")
     args = parser.parse_args()
 
     root = normalize_root(args.root)
@@ -118,7 +118,7 @@ def main() -> int:
         Path(args.json_output).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.strict_current:
-        expected = (58, 359, 0)
+        expected = (59, 363, 0)
         actual = (result["scanned_characters"], result["scanned_event_links"], len(gaps))
         if actual != expected:
             print(f"STRICT_CURRENT_MISMATCH expected={expected} actual={actual}", file=sys.stderr)

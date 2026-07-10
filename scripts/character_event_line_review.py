@@ -80,7 +80,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default=".", help="Wiki root directory")
     parser.add_argument("--json-output", help="Optional JSON output path")
-    parser.add_argument("--strict-current", action="store_true", help="Assert current Phase 4D expected counts")
+    parser.add_argument("--strict-current", action="store_true", help="Assert the current curated character-line baseline")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -107,7 +107,7 @@ def main() -> int:
         Path(args.json_output).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.strict_current:
-        expected = (105, 58, 19, 28)
+        expected = (105, 59, 18, 28)
         actual = (data["total_character_files"], len(with_line), len(linked_missing), len(zero_missing))
         if actual != expected:
             print(f"STRICT_CURRENT_MISMATCH expected={expected} actual={actual}", file=sys.stderr)

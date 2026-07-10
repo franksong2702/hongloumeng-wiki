@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki 维护审查与收尾报告
 created: 2026-07-08
-updated: 2026-07-09
+updated: 2026-07-10
 status: final
 type: maintenance-review
 owner: 学夫
@@ -14,7 +14,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 > 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-09 15:34，本轮已经完成机制建设、机械修复、链接规范、内容补强和健康检查收口。
+> 截至 2026-07-10 09:08，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与首个小专题端到端抽查。
 
 ## 1. 一句话结论
 
@@ -27,15 +27,15 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 ## 2. 当前健康状态
 
-本节以 2026-07-09 15:34 重新运行的本地健康检查为准。
+本节以 2026-07-10 09:08 重新运行的本地健康检查为准。
 
 | 项目 | 当前值 |
 |---|---:|
-| 成品 Wiki Markdown | 821 |
+| 成品 Wiki Markdown | 822 |
 | raw/ 原始文本 Markdown | 121 |
-| 成品+raw 管理口径 | 942 |
-| 维护/审查 Markdown | 3 |
-| 全部 Markdown | 945 |
+| 成品+raw 管理口径 | 943 |
+| 维护/审查 Markdown | 4 |
+| 全部 Markdown | 947 |
 | ERROR | 0 |
 | WARN | 0 |
 
@@ -43,14 +43,14 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 检查项 | 结果 |
 |---|---:|
-| wikilinks | ok=12936, scanned=12936 |
-| source_anchor_references | ok=832, scanned=832 |
+| wikilinks | ok=13439, scanned=13439 |
+| source_anchor_references | ok=861, scanned=861 |
 | event_source_anchor_coverage | ok=176, scanned=176 |
-| source_anchors | duplicate=0, body=279 |
-| chapter_key_event_links | ok=201, suspect=0 |
-| thin_pages | scanned=550，无 thin WARN |
+| source_anchors | duplicate=0, body=283 |
+| chapter_key_event_links | ok=202, suspect=0 |
+| thin_pages | scanned=551，无 thin WARN |
 
-证据文件：`/tmp/hongloumeng_phase3q_health_baseline.txt`。
+证据文件：`/tmp/hongloumeng_baoyu_beating_precommit_health.md`。
 
 ## 3. 本轮维护完成范围
 
@@ -237,3 +237,16 @@ Git 状态：M README.md；?? raw/
 > 现在 `ERROR 0 / WARN 0`，是否意味着这个 Wiki 内容已经“文学上完美”？
 
 不是。健康检查只证明结构、链接、锚点、薄页阈值这些可机械验证项已经达标；它不能替代红学判断，也不能证明每一页的观点都已经最优。当前可确认的是：Wiki 已经具备稳定维护机制，后续可以在这个机制上做人工精读，而不是继续靠脚本扫薄页大规模补内容。
+
+## 9. 小专题端到端抽查机制
+
+健康检查归零后，不再做全库泛泛扩写；后续内容维护以一个“小专题链路”为单位抽查。机械边界如下：
+
+1. **人物入口**：核心参与人物页应能进入事件页；只有事件确实构成人物主线时，才加入 `## 主要事件线`。
+2. **事件解释**：事件页必须说明哪一回是前因、哪一回真正发生、哪一回写直接余波，不能只并列回目编号。
+3. **正文现场**：关键因果、事件本身和重要后果应各有语义明确的 `^hlm-*` 正文锚点；锚点标签必须与实际落点相符。
+4. **章节回返**：相关章节导读应能回到事件页，并为关键场景提供原文定位。
+5. **横向解释**：事件页应接到必要的概念或红学页，但不为增加链接数量而扩写外围页面。
+6. **维护闸门**：修改后运行健康检查、人物事件线统计、人物—事件反链检查和 `git diff --check`。
+
+首个样例为[[02_Learn/08_book-wikis/红楼梦/events/宝玉挨打.md|宝玉挨打]]：链路按“第028回远因—第032回近因—第033回本事—第034回余波”组织，并把蒋玉菡、贾母、林黛玉等必要人物入口接回事件现场。后续专题可复用同一套检查顺序，但不能机械复制相同人物数量或回目数量。
