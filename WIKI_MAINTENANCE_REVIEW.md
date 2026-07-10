@@ -105,7 +105,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - 修正 [[redology/护官符与官场秩序研究综述.md]] 中两处 `hlg-004-hulu-an` 错拼为现存的 `hlm-004-hulu-an`；
 - 新增 [[scripts/mkdocs_build_check.py]]：先转换、再运行 `mkdocs build --strict`，并保存 `_mkdocs_build/mkdocs-strict-build.log`；当前转换 851 个读者站文件，严格构建返回 `exit 0`，MkDocs 链接/导航诊断为 0；
 - 启用 Material 原生 Mermaid 转换；[[maps/人物关系图.md]]、[[maps/贾府结构图.md]] 的图块会生成 `class="mermaid"` 容器而非代码高亮块；
-- 将静态站导航重组为六个读者入口，并移除 `navigation.expand`；新增 tabs、面包屑和“每个读者页恰好出现一次”的构建期覆盖检查；
+- 将静态站导航重组为六个读者入口，并移除 `navigation.expand`；新增 tabs、面包屑和“导航入口不重复”的构建期检查，人物、事件、章节等长尾页面改由分类索引与全文搜索进入；
 - 将 [[log.md]] 定义为读者发布日志，并把日志新鲜度检查接入 [[scripts/wiki_health_check.py]] 与 GitHub Pages 工作流；
 - 构建证据：`_mkdocs_build/mkdocs-strict-build.log`（已由 `.gitignore` 排除）；源 Wiki 回归证据：`/tmp/hongloumeng_wiki_health_after_mkdocs_20260710.txt`（`ERROR 0 / WARN 0`）。
 

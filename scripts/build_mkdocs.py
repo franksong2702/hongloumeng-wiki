@@ -421,21 +421,20 @@ def flatten_nav_paths(nav):
     return paths
 
 
-def validate_nav_coverage(nav, docs_root):
-    """要求读者站的每一页恰好出现一次，避免手工分区后产生漏页或重复。"""
+def validate_nav_entries(nav, docs_root):
+    """要求读者导航中的入口页存在且不重复；长尾文章改由索引与搜索进入。"""
     expected = {
         os.path.relpath(path, docs_root).replace("\\", "/")
         for path in Path(docs_root).rglob("*.md")
     }
     actual_paths = flatten_nav_paths(nav)
     actual = set(actual_paths)
-    missing = sorted(expected - actual)
     duplicated = sorted(path for path, count in Counter(actual_paths).items() if count > 1)
     unknown = sorted(actual - expected)
-    if missing or duplicated or unknown:
+    if duplicated or unknown:
         raise RuntimeError(
-            "导航覆盖不完整: "
-            f"missing={missing}, duplicated={duplicated}, unknown={unknown}"
+            "导航入口无效: "
+            f"duplicated={duplicated}, unknown={unknown}"
         )
 
 
@@ -451,12 +450,6 @@ def generate_nav(docs_root):
         "outputs/红学争议导览.md",
         "outputs/大观园空间阅读手册.md",
     }
-    featured_queries = {
-        "queries/人物索引.md",
-        "queries/事件索引.md",
-        "queries/回目索引.md",
-    }
-
     nav = [
         {
             "开始阅读": [
@@ -474,17 +467,15 @@ def generate_nav(docs_root):
                 require_nav_page("人物手册", "outputs/红楼梦人物手册.md", docs_root),
                 require_nav_page("金陵十二钗手册", "outputs/金陵十二钗研究手册.md", docs_root),
                 require_nav_page("人物关系图", "maps/人物关系图.md", docs_root),
-                directory_nav("全部人物", "characters", docs_root),
-                directory_nav("全部事件", "events", docs_root),
             ]
         },
         {
             "主题与研究": [
                 require_nav_page("主题导读", "outputs/红楼梦主题导读.md", docs_root),
                 require_nav_page("红学争议导览", "outputs/红学争议导览.md", docs_root),
-                directory_nav("概念", "concepts", docs_root),
-                directory_nav("红学研究", "redology", docs_root),
-                directory_nav("诗词", "poetry", docs_root),
+                require_nav_page("概念索引", "queries/概念索引.md", docs_root),
+                require_nav_page("诗词索引", "queries/诗词索引.md", docs_root),
+                require_nav_page("红学大家索引", "redology/红学大家索引.md", docs_root),
                 directory_nav("意象", "motifs-symbols", docs_root),
                 directory_nav("历史与制度背景", "background", docs_root),
                 directory_nav("更多阅读产品", "outputs", docs_root, featured_outputs),
@@ -494,7 +485,7 @@ def generate_nav(docs_root):
             "空间、家族与时间": [
                 require_nav_page("大观园空间阅读手册", "outputs/大观园空间阅读手册.md", docs_root),
                 directory_nav("图谱", "maps", docs_root, {"maps/人物关系图.md"}),
-                directory_nav("地点", "locations", docs_root),
+                require_nav_page("地点索引", "queries/地点索引.md", docs_root),
                 directory_nav("家族", "families", docs_root),
                 directory_nav("时间线", "timelines", docs_root),
             ]
@@ -502,21 +493,20 @@ def generate_nav(docs_root):
         {
             "章节与原文": [
                 require_nav_page("回目索引", "queries/回目索引.md", docs_root),
-                directory_nav("章节导读", "chapters", docs_root),
-                directory_nav("简体原文", "texts/simplified", docs_root),
-                directory_nav("繁体原文", "texts/traditional", docs_root),
+                require_nav_page("简体原文索引", "queries/简体原文索引.md", docs_root),
+                require_nav_page("繁体原文索引", "queries/繁体原文索引.md", docs_root),
+                require_nav_page("原文锚点索引", "queries/原文锚点索引.md", docs_root),
             ]
         },
         {
             "查阅与关于": [
-                directory_nav("全部索引", "queries", docs_root, featured_queries),
                 require_nav_page("研究路线图", "ROADMAP.md", docs_root),
                 require_nav_page("Wiki Schema", "SCHEMA.md", docs_root),
                 require_nav_page("更新日志", "log.md", docs_root),
             ]
         },
     ]
-    validate_nav_coverage(nav, docs_root)
+    validate_nav_entries(nav, docs_root)
     return nav
 
 
@@ -566,6 +556,17 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
         },
 
         "nav": nav,
+        # 长尾文章通过分类索引和全文搜索进入，避免把 700+ 条目塞进左侧导航。
+        # not_in_nav 仅抑制“有意不入侧栏”的提示，不影响页面构建、直链或搜索收录。
+        "not_in_nav": """/characters/**
+/events/**
+/concepts/**
+/locations/**
+/poetry/**
+/redology/**
+!/redology/红学大家索引.md
+/chapters/**
+/texts/**""",
 
         "markdown_extensions": [
             "tables",
