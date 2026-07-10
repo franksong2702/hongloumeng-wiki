@@ -14,7 +14,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 > 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-10 09:08，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与首个小专题端到端抽查。
+> 截至 2026-07-10 09:32，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与两次小专题端到端抽查。
 
 ## 1. 一句话结论
 
@@ -27,15 +27,15 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 ## 2. 当前健康状态
 
-本节以 2026-07-10 09:08 重新运行的本地健康检查为准。
+本节以 2026-07-10 09:32 重新运行的本地健康检查为准。
 
 | 项目 | 当前值 |
 |---|---:|
-| 成品 Wiki Markdown | 822 |
+| 成品 Wiki Markdown | 826 |
 | raw/ 原始文本 Markdown | 121 |
-| 成品+raw 管理口径 | 943 |
+| 成品+raw 管理口径 | 947 |
 | 维护/审查 Markdown | 4 |
-| 全部 Markdown | 947 |
+| 全部 Markdown | 951 |
 | ERROR | 0 |
 | WARN | 0 |
 
@@ -43,14 +43,14 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 检查项 | 结果 |
 |---|---:|
-| wikilinks | ok=13439, scanned=13439 |
-| source_anchor_references | ok=861, scanned=861 |
-| event_source_anchor_coverage | ok=176, scanned=176 |
-| source_anchors | duplicate=0, body=283 |
-| chapter_key_event_links | ok=202, suspect=0 |
-| thin_pages | scanned=551，无 thin WARN |
+| wikilinks | ok=13567, scanned=13567 |
+| source_anchor_references | ok=882, scanned=882 |
+| event_source_anchor_coverage | ok=179, scanned=179 |
+| source_anchors | duplicate=0, body=288 |
+| chapter_key_event_links | ok=208, suspect=0 |
+| thin_pages | scanned=555，无 thin WARN |
 
-证据文件：`/tmp/hongloumeng_baoyu_beating_precommit_health.md`。
+证据文件：`/tmp/hongloumeng_xiaohong_pre_review_health.md`。
 
 ## 3. 本轮维护完成范围
 
@@ -250,3 +250,5 @@ Git 状态：M README.md；?? raw/
 6. **维护闸门**：修改后运行健康检查、人物事件线统计、人物—事件反链检查和 `git diff --check`。
 
 首个样例为[[02_Learn/08_book-wikis/红楼梦/events/宝玉挨打.md|宝玉挨打]]：链路按“第028回远因—第032回近因—第033回本事—第034回余波”组织，并把蒋玉菡、贾母、林黛玉等必要人物入口接回事件现场。后续专题可复用同一套检查顺序，但不能机械复制相同人物数量或回目数量。
+
+第二个样例为“小红—贾芸—凤姐”链：从[[02_Learn/08_book-wikis/红楼梦/characters/小红.md|小红]]与[[02_Learn/08_book-wikis/红楼梦/characters/贾芸.md|贾芸]]两个人物入口，接到[[02_Learn/08_book-wikis/红楼梦/events/凤姐赏识小红.md|凤姐赏识小红]]、[[02_Learn/08_book-wikis/红楼梦/events/贾芸再求凤姐办差.md|贾芸再求凤姐办差]]和[[02_Learn/08_book-wikis/红楼梦/events/贾芸等谋卖巧姐.md|贾芸等谋卖巧姐]]。该样例同时证明：专题审查需要区分前八十回与现行后四十回，不能为了制造平滑人物弧线而抹掉文本层次。

@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki Agent 操作手册
 created: 2026-05-02
-updated: 2026-07-09
+updated: 2026-07-10
 type: meta
 book: 红楼梦
 status: curated-v1
@@ -21,8 +21,8 @@ tags: [hongloumeng, meta, agent]
 |------|------:|------|----------|
 | `chapters/` | 120 | 120回章节导读 | 概要 + 出场人物 + 关键事件 + 伏笔 |
 | `texts/simplified/` | 120 | 简体原文（只读转换层） | 原文 + block anchors |
-| `characters/` | 105 | 人物页 | 人物小传 + 关键关系 + 关键章节 + 相关页面 |
-| `events/` | 176 | 事件页 | 事件经过 + 叙事功能 + 相关回目 + 相关概念 |
+| `characters/` | 106 | 人物页 | 人物小传 + 关键关系 + 关键章节 + 相关页面 |
+| `events/` | 179 | 事件页 | 事件经过 + 叙事功能 + 相关回目 + 相关概念 |
 | `concepts/` | 38 | 主题概念 | 概念说明 + 阅读视角 + 关键章节 |
 | `locations/` | 21 | 地点空间 | 空间说明 + 居住者/功能 + 相关章节 |
 | `poetry/` | 12 | 诗词曲文 | 文本位置 + 赏析 + 人物/主题关系 |
@@ -37,15 +37,15 @@ tags: [hongloumeng, meta, agent]
 | `images/` | 26 | AI 插图 | 人物肖像16 + 场景图9 + 四季图1 |
 | `templates/` | 2 | 页面模板 | chapter-template, character-template |
 
-**总文件数：822（成品 Wiki Markdown，不含 `raw/`）**
+**总文件数：826（成品 Wiki Markdown，不含 `raw/`）**
 
 ## 2. 当前状态快照
 
 | 指标 | 值 |
 |------|---|
-| 成品 Wiki Markdown | 822 |
+| 成品 Wiki Markdown | 826 |
 | raw 原始文本 Markdown | 121（单独统计） |
-| 成品+raw 管理口径 | 943 |
+| 成品+raw 管理口径 | 947 |
 | 总字符页行数 | ~4500（93页） |
 | 断链 | 0（19个已在本轮回圈修复） |
 | 占位符 | 0 |
