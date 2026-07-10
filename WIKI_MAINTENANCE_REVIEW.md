@@ -14,7 +14,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 > 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与五次小专题端到端抽查。
+> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与六次小专题端到端抽查。
 
 ## 1. 一句话结论
 
@@ -31,11 +31,11 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 项目 | 当前值 |
 |---|---:|
-| 成品 Wiki Markdown | 827 |
+| 成品 Wiki Markdown | 828 |
 | raw/ 原始文本 Markdown | 121 |
-| 成品+raw 管理口径 | 948 |
+| 成品+raw 管理口径 | 949 |
 | 维护/审查 Markdown | 4 |
-| 全部 Markdown | 952 |
+| 全部 Markdown | 953 |
 | ERROR | 0 |
 | WARN | 0 |
 
@@ -43,14 +43,14 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 检查项 | 结果 |
 |---|---:|
-| wikilinks | ok=13619, scanned=13619 |
-| source_anchor_references | ok=890, scanned=890 |
-| event_source_anchor_coverage | ok=180, scanned=180 |
-| source_anchors | duplicate=0, body=291 |
-| chapter_key_event_links | ok=209, suspect=0 |
-| thin_pages | scanned=556，无 thin WARN |
+| wikilinks | ok=13644, scanned=13644 |
+| source_anchor_references | ok=891, scanned=891 |
+| event_source_anchor_coverage | ok=181, scanned=181 |
+| source_anchors | duplicate=0, body=292 |
+| chapter_key_event_links | ok=210, suspect=0 |
+| thin_pages | scanned=557，无 thin WARN |
 
-证据文件：`/tmp/hongloumeng_health_character_audit_final.md`。
+证据文件：`/tmp/hongloumeng_health_liubanqiao_final.md`。
 
 ## 3. 本轮维护完成范围
 
@@ -78,6 +78,16 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - 审查其余 43 名尚未有主要事件线的人物，区分真正漏链、从属提及和不适用普通小说事件线三类；
 - 将 [[characters/潘又安.md]] 接入“鸳鸯撞见司棋私情—司棋被逐”两节点短线；
 - 为 [[characters/狗儿.md]]、[[characters/板儿.md]]、[[characters/金寡妇.md]]、[[characters/贾代儒.md]] 补直接事件入口，但不为单点背景人物制造主线。
+
+### 刘姥姥—狗儿—板儿—巧姐阅读路径补强
+
+完成内容：
+
+- 新建 [[events/板儿巧姐换佛手柚子.md]]，把第041回的果物调换从概述性伏笔变为可进入的事件页；
+- 为该段正文增加 `^hlm-041-baner-qiaojie-huanguo` 锚点，并把事件接入第041回导读和刘姥姥事件索引；
+- 将 [[characters/板儿.md]] 升级为“第006回受助—第041回连接巧姐线”的两节点短事件线；
+- 将 [[characters/刘姥姥.md]] 与 [[characters/巧姐.md]] 的主要事件线接入该节点，并补齐 [[events/贾芸等谋卖巧姐.md]] 对刘姥姥、平儿的反向链接；
+- 明确保留 [[characters/狗儿.md]] 为第006回的单点家庭动机节点，不把他误写成第041回或后期救援的参与者。
 
 ### Phase 0 / Phase 1：维护机制与机械修复
 

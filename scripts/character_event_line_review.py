@@ -22,7 +22,7 @@ import sys
 
 VAULT_PREFIX = "02_Learn/08_book-wikis/红楼梦"
 CHAR_LINK_RE = re.compile(r"02_Learn/08_book-wikis/红楼梦/characters/([^\]|#]+)\.md")
-CURRENT_BASELINE = (106, 64, 19, 23)
+CURRENT_BASELINE = (106, 65, 18, 23)
 
 
 def read_title(path: Path) -> str:
