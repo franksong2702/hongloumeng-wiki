@@ -118,7 +118,7 @@ def main() -> int:
         Path(args.json_output).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.strict_current:
-        expected = (61, 372, 0)
+        expected = (62, 376, 0)
         actual = (result["scanned_characters"], result["scanned_event_links"], len(gaps))
         if actual != expected:
             print(f"STRICT_CURRENT_MISMATCH expected={expected} actual={actual}", file=sys.stderr)

@@ -107,7 +107,7 @@ def main() -> int:
         Path(args.json_output).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.strict_current:
-        expected = (106, 61, 18, 27)
+        expected = (106, 62, 17, 27)
         actual = (data["total_character_files"], len(with_line), len(linked_missing), len(zero_missing))
         if actual != expected:
             print(f"STRICT_CURRENT_MISMATCH expected={expected} actual={actual}", file=sys.stderr)

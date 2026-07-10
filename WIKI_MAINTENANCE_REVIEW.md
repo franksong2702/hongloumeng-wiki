@@ -14,7 +14,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 > 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-10 09:32，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与两次小专题端到端抽查。
+> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与三次小专题端到端抽查。
 
 ## 1. 一句话结论
 
@@ -27,15 +27,15 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 ## 2. 当前健康状态
 
-本节以 2026-07-10 09:32 重新运行的本地健康检查为准。
+本节以 2026-07-10 重新运行的本地严格健康检查为准。
 
 | 项目 | 当前值 |
 |---|---:|
-| 成品 Wiki Markdown | 826 |
+| 成品 Wiki Markdown | 827 |
 | raw/ 原始文本 Markdown | 121 |
-| 成品+raw 管理口径 | 947 |
+| 成品+raw 管理口径 | 948 |
 | 维护/审查 Markdown | 4 |
-| 全部 Markdown | 951 |
+| 全部 Markdown | 952 |
 | ERROR | 0 |
 | WARN | 0 |
 
@@ -43,16 +43,25 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 检查项 | 结果 |
 |---|---:|
-| wikilinks | ok=13567, scanned=13567 |
-| source_anchor_references | ok=882, scanned=882 |
-| event_source_anchor_coverage | ok=179, scanned=179 |
-| source_anchors | duplicate=0, body=288 |
-| chapter_key_event_links | ok=208, suspect=0 |
-| thin_pages | scanned=555，无 thin WARN |
+| wikilinks | ok=13603, scanned=13603 |
+| source_anchor_references | ok=890, scanned=890 |
+| event_source_anchor_coverage | ok=180, scanned=180 |
+| source_anchors | duplicate=0, body=291 |
+| chapter_key_event_links | ok=209, suspect=0 |
+| thin_pages | scanned=556，无 thin WARN |
 
-证据文件：`/tmp/hongloumeng_xiaohong_pre_review_health.md`。
+证据文件：`/tmp/hongloumeng_health_linhai_final.md`。
 
 ## 3. 本轮维护完成范围
+
+### 林如海—黛玉入府阅读路径补强
+
+完成内容：
+
+- 新建 [[events/林如海病逝.md]]，区分第012回病重、第014回死亡确认和第016回安葬返京；
+- 为三段正文分别补语义锚点，事件页和人物页可直接跳转原文；
+- 将 [[characters/林如海.md]] 从单一事件反链人物升级为四节点主要事件线；
+- 补齐 [[events/贾雨村起复.md]]、[[events/黛玉进贾府.md]] 对林如海的反向链接，并更新反链脚本基线。
 
 ### Phase 0 / Phase 1：维护机制与机械修复
 
