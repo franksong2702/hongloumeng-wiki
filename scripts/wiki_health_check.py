@@ -20,6 +20,7 @@ import argparse
 import datetime as _dt
 import os
 import re
+import subprocess
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -168,6 +169,33 @@ SELF_DESCRIPTION_DOCS = [
 ]
 
 GOVERNANCE_SNAPSHOT_DOC = "outputs/人物事件线剩余人物审查.md"
+
+RELEASE_LOG_DOC = "log.md"
+RELEASE_LOG_PATHS = [
+    "index.md",
+    "START_HERE.md",
+    "ROADMAP.md",
+    "chapters",
+    "characters",
+    "concepts",
+    "events",
+    "families",
+    "locations",
+    "maps",
+    "motifs-symbols",
+    "poetry",
+    "background",
+    "redology",
+    "timelines",
+    "queries",
+    "outputs",
+    "scripts/build_mkdocs.py",
+    "scripts/mkdocs_build_check.py",
+    "scripts/wiki_health_check.py",
+    ".github/workflows/deploy.yml",
+]
+
+RELEASE_LOG_DATE_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})(?:[｜：:]|\s)")
 
 
 @dataclass
@@ -1063,6 +1091,94 @@ def check_self_description(
     return findings, dict(stats)
 
 
+def run_git(root: Path, arguments: list[str]) -> subprocess.CompletedProcess[str] | None:
+    """只读执行 Git 查询；脱离 Git 仓库时返回 None，不把环境限制误报成内容错误。"""
+    try:
+        return subprocess.run(
+            ["git", *arguments],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except FileNotFoundError:
+        return None
+
+
+def check_release_log(root: Path) -> tuple[list[Finding], dict[str, int]]:
+    """要求读者可见的发布变动与 log.md 同步，避免日志长期停留在旧版本。"""
+    findings: list[Finding] = []
+    stats = Counter()
+    path = root / RELEASE_LOG_DOC
+    if not path.exists():
+        findings.append(Finding("ERROR", "release_log_missing", RELEASE_LOG_DOC, None, "缺少面向读者的发布日志"))
+        return findings, dict(stats)
+
+    dated_entries = []
+    for line_no, line in enumerate(read_text(path).splitlines(), 1):
+        match = RELEASE_LOG_DATE_RE.match(line)
+        if match:
+            dated_entries.append((match.group(1), line_no))
+
+    stats["dated_entries"] = len(dated_entries)
+    if not dated_entries:
+        findings.append(Finding("ERROR", "release_log_format", RELEASE_LOG_DOC, 1, "缺少格式为 `## YYYY-MM-DD｜说明` 的发布记录"))
+        return findings, dict(stats)
+
+    latest_log_date, latest_log_line = dated_entries[0]
+    if latest_log_date != max(date for date, _ in dated_entries):
+        findings.append(Finding("ERROR", "release_log_order", RELEASE_LOG_DOC, latest_log_line, "发布记录应按日期倒序，最新记录必须位于顶部"))
+
+    latest_commit = run_git(
+        root,
+        ["log", "-1", "--format=%as", "--", *RELEASE_LOG_PATHS],
+    )
+    if latest_commit is None or latest_commit.returncode != 0 or not latest_commit.stdout.strip():
+        stats["git_history_unavailable"] += 1
+        return findings, dict(stats)
+
+    latest_release_date = latest_commit.stdout.strip()
+    stats["git_history_checked"] += 1
+    if latest_log_date < latest_release_date:
+        findings.append(
+            Finding(
+                "ERROR",
+                "release_log_stale",
+                RELEASE_LOG_DOC,
+                latest_log_line,
+                f"最新日志日期 {latest_log_date}，但读者可见内容或发布机制最新变更日期为 {latest_release_date}",
+            )
+        )
+
+    changed_paths: set[str] = set()
+    worktree_paths = [*RELEASE_LOG_PATHS, RELEASE_LOG_DOC]
+    for arguments in (
+        ["diff", "--name-only", "--", *worktree_paths],
+        ["diff", "--cached", "--name-only", "--", *worktree_paths],
+    ):
+        changed = run_git(root, arguments)
+        if changed is not None and changed.returncode == 0:
+            changed_paths.update(path for path in changed.stdout.splitlines() if path)
+
+    if changed_paths:
+        stats["uncommitted_release_paths"] = len(changed_paths)
+        if RELEASE_LOG_DOC not in changed_paths:
+            findings.append(
+                Finding(
+                    "ERROR",
+                    "release_log_missing_for_worktree_change",
+                    RELEASE_LOG_DOC,
+                    latest_log_line,
+                    f"当前待提交的读者可见改动未同步更新 log.md: {sorted(changed_paths)}",
+                )
+            )
+
+    if not findings:
+        stats["ok"] += 1
+    return findings, dict(stats)
+
+
 def parse_int_tuple(raw: str, expected_length: int) -> tuple[int, ...] | None:
     """Parse a compact frontmatter list such as ``[106, 62, 17, 27]``."""
 
@@ -1289,6 +1405,7 @@ def render_report(
                 "- source_anchor_reference_missing 表示页面链接到了不存在的原文 block anchor；链接文件存在但无法精确跳转，属于 ERROR。",
                 "- event_source_anchor_missing 表示事件页没有提供 `texts/simplified/第xxx回.md#^hlm-*` 精确正文锚点；若已有“原文锚点”区块则先作为 WARN。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
+                "- release_log_stale/release_log_missing_for_worktree_change 表示读者可见内容或发布机制已经变更，但 log.md 未在同一发布批次中更新，属于 ERROR。",
                 "- 默认运行只生成报告；如需把结构问题作为闸门，请加 --strict。",
             ],
         )
@@ -1327,6 +1444,7 @@ def main() -> int:
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
+        ("release_log", lambda: check_release_log(root)),
         ("governance_snapshots", lambda: check_governance_snapshots(root)),
     ]
 

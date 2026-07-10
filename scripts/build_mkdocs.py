@@ -12,14 +12,36 @@
 此脚本不修改任何源文件。所有转换仅在输出目录中执行。
 """
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 import html
 import os
 import posixpath
 import re
 import sys
+from pathlib import Path
 
 import yaml
+
+
+class PythonName:
+    """让 PyYAML 输出 MkDocs 所需的 ``!!python/name`` 可调用对象标签。"""
+
+    def __init__(self, name):
+        self.name = name
+
+
+class MkdocsDumper(yaml.Dumper):
+    """专用于写出 MkDocs 配置的 YAML dumper。"""
+
+
+def represent_python_name(dumper, data):
+    return dumper.represent_scalar(
+        f"tag:yaml.org,2002:python/name:{data.name}",
+        "",
+    )
+
+
+MkdocsDumper.add_representer(PythonName, represent_python_name)
 
 # 目录映射：中文标题用于导航
 DIR_NAMES = {
@@ -43,9 +65,6 @@ DIR_NAMES = {
     "templates": "模板",
     "images": "图片",
 }
-
-# 顶层文件。README 与 index 同时存在时，MkDocs 会将前者排除；静态站只保留 index。
-TOP_FILES = ["START_HERE", "SCHEMA", "ROADMAP", "log", "index"]
 
 VAULT_LINK_PREFIX = "02_Learn/08_book-wikis/红楼梦/"
 
@@ -342,38 +361,24 @@ def make_title(name):
     return title
 
 
-def generate_nav(docs_root):
-    """从目录结构生成 MkDocs nav 配置。"""
-    nav = []
-
-    # 顶层文件
-    for fname in TOP_FILES:
-        fpath = f"{fname}.md"
-        full = os.path.join(docs_root, fpath)
-        if os.path.exists(full):
-            nav.append({make_title(fname): fpath})
-
-    # 目录
-    for dname in sorted(os.listdir(docs_root)):
-        dpath = os.path.join(docs_root, dname)
-        if not os.path.isdir(dpath) or dname.startswith("."):
-            continue
-
-        subdir_nav = build_subdir_nav(dname, dpath, docs_root)
-        if subdir_nav:
-            nav.append({make_title(dname): subdir_nav})
-
-    return nav
+def require_nav_page(title, relative_path, docs_root):
+    """返回一个必需页面的 nav 项；缺页时在构建阶段明确失败。"""
+    if not os.path.isfile(os.path.join(docs_root, relative_path)):
+        raise RuntimeError(f"导航必需页面不存在: {relative_path}")
+    return {title: relative_path}
 
 
-def build_subdir_nav(dirname, dirpath, docs_root):
-    """构建子目录的 nav 条目。"""
+def build_subdir_nav(dirname, dirpath, docs_root, excluded_paths=None):
+    """构建完整目录的 nav 条目，并允许已在上层突出的页面不重复出现。"""
+    excluded_paths = excluded_paths or set()
     entries = []
 
     # 先处理直接在该目录下的 .md 文件
     md_files = sorted([f for f in os.listdir(dirpath) if f.endswith(".md") and f not in SKIP])
     for fname in md_files:
         rel = os.path.relpath(os.path.join(dirpath, fname), docs_root)
+        if rel in excluded_paths:
+            continue
         entries.append({make_title(fname): rel})
 
     # 再处理子目录
@@ -382,11 +387,137 @@ def build_subdir_nav(dirname, dirpath, docs_root):
         if not os.path.isdir(subpath) or subname.startswith("."):
             continue
 
-        sub_entries = build_subdir_nav(subname, subpath, docs_root)
+        sub_entries = build_subdir_nav(subname, subpath, docs_root, excluded_paths)
         if sub_entries:
             entries.append({make_title(subname): sub_entries})
 
     return entries
+
+
+def directory_nav(title, relative_dir, docs_root, excluded_paths=None):
+    """把一个完整目录收进可折叠的二级导航。"""
+    directory = os.path.join(docs_root, relative_dir)
+    entries = build_subdir_nav(relative_dir, directory, docs_root, excluded_paths)
+    if not entries:
+        raise RuntimeError(f"导航目录为空或不存在: {relative_dir}")
+    return {title: entries}
+
+
+def flatten_nav_paths(nav):
+    """提取 nav 中的全部 Markdown 路径，用于防止导航重构时漏页或重复页。"""
+    paths = []
+
+    def visit(node):
+        if isinstance(node, str):
+            paths.append(node)
+        elif isinstance(node, list):
+            for child in node:
+                visit(child)
+        elif isinstance(node, dict):
+            for child in node.values():
+                visit(child)
+
+    visit(nav)
+    return paths
+
+
+def validate_nav_coverage(nav, docs_root):
+    """要求读者站的每一页恰好出现一次，避免手工分区后产生漏页或重复。"""
+    expected = {
+        os.path.relpath(path, docs_root).replace("\\", "/")
+        for path in Path(docs_root).rglob("*.md")
+    }
+    actual_paths = flatten_nav_paths(nav)
+    actual = set(actual_paths)
+    missing = sorted(expected - actual)
+    duplicated = sorted(path for path, count in Counter(actual_paths).items() if count > 1)
+    unknown = sorted(actual - expected)
+    if missing or duplicated or unknown:
+        raise RuntimeError(
+            "导航覆盖不完整: "
+            f"missing={missing}, duplicated={duplicated}, unknown={unknown}"
+        )
+
+
+def generate_nav(docs_root):
+    """生成以读者任务组织、但不遗漏任何页面的六区导航。"""
+    featured_outputs = {
+        "outputs/红楼梦速读指南.md",
+        "outputs/红楼梦阅读路线.md",
+        "outputs/红楼梦研究型阅读路线.md",
+        "outputs/红楼梦人物手册.md",
+        "outputs/金陵十二钗研究手册.md",
+        "outputs/红楼梦主题导读.md",
+        "outputs/红学争议导览.md",
+        "outputs/大观园空间阅读手册.md",
+    }
+    featured_queries = {
+        "queries/人物索引.md",
+        "queries/事件索引.md",
+        "queries/回目索引.md",
+    }
+
+    nav = [
+        {
+            "开始阅读": [
+                require_nav_page("首页", "index.md", docs_root),
+                require_nav_page("新手入口", "START_HERE.md", docs_root),
+                require_nav_page("速读指南", "outputs/红楼梦速读指南.md", docs_root),
+                require_nav_page("分阶段阅读路线", "outputs/红楼梦阅读路线.md", docs_root),
+                require_nav_page("研究型阅读路线", "outputs/红楼梦研究型阅读路线.md", docs_root),
+            ]
+        },
+        {
+            "人物与情节": [
+                require_nav_page("人物索引", "queries/人物索引.md", docs_root),
+                require_nav_page("事件索引", "queries/事件索引.md", docs_root),
+                require_nav_page("人物手册", "outputs/红楼梦人物手册.md", docs_root),
+                require_nav_page("金陵十二钗手册", "outputs/金陵十二钗研究手册.md", docs_root),
+                require_nav_page("人物关系图", "maps/人物关系图.md", docs_root),
+                directory_nav("全部人物", "characters", docs_root),
+                directory_nav("全部事件", "events", docs_root),
+            ]
+        },
+        {
+            "主题与研究": [
+                require_nav_page("主题导读", "outputs/红楼梦主题导读.md", docs_root),
+                require_nav_page("红学争议导览", "outputs/红学争议导览.md", docs_root),
+                directory_nav("概念", "concepts", docs_root),
+                directory_nav("红学研究", "redology", docs_root),
+                directory_nav("诗词", "poetry", docs_root),
+                directory_nav("意象", "motifs-symbols", docs_root),
+                directory_nav("历史与制度背景", "background", docs_root),
+                directory_nav("更多阅读产品", "outputs", docs_root, featured_outputs),
+            ]
+        },
+        {
+            "空间、家族与时间": [
+                require_nav_page("大观园空间阅读手册", "outputs/大观园空间阅读手册.md", docs_root),
+                directory_nav("图谱", "maps", docs_root, {"maps/人物关系图.md"}),
+                directory_nav("地点", "locations", docs_root),
+                directory_nav("家族", "families", docs_root),
+                directory_nav("时间线", "timelines", docs_root),
+            ]
+        },
+        {
+            "章节与原文": [
+                require_nav_page("回目索引", "queries/回目索引.md", docs_root),
+                directory_nav("章节导读", "chapters", docs_root),
+                directory_nav("简体原文", "texts/simplified", docs_root),
+                directory_nav("繁体原文", "texts/traditional", docs_root),
+            ]
+        },
+        {
+            "查阅与关于": [
+                directory_nav("全部索引", "queries", docs_root, featured_queries),
+                require_nav_page("研究路线图", "ROADMAP.md", docs_root),
+                require_nav_page("Wiki Schema", "SCHEMA.md", docs_root),
+                require_nav_page("更新日志", "log.md", docs_root),
+            ]
+        },
+    ]
+    validate_nav_coverage(nav, docs_root)
+    return nav
 
 
 def write_mkdocs_config(nav, dst_dir, docs_root):
@@ -405,8 +536,10 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
             "name": "material",
             "language": "zh",
             "features": [
+                "navigation.tabs",
+                "navigation.tabs.sticky",
                 "navigation.sections",
-                "navigation.expand",
+                "navigation.path",
                 "navigation.top",
                 "navigation.tracking",
                 "search.highlight",
@@ -443,6 +576,17 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
             "footnotes",
             "admonition",
             "pymdownx.details",
+            {
+                "pymdownx.superfences": {
+                    "custom_fences": [
+                        {
+                            "name": "mermaid",
+                            "class": "mermaid",
+                            "format": PythonName("pymdownx.superfences.fence_code_format"),
+                        }
+                    ]
+                }
+            },
             {"toc": {"permalink": True}},
         ],
 
@@ -466,7 +610,15 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
 
     yml_path = os.path.join(docs_root, "mkdocs.yml")
     with open(yml_path, "w", encoding="utf-8") as f:
-        yaml.dump(config, f, default_flow_style=False, allow_unicode=True, sort_keys=False, width=120)
+        yaml.dump(
+            config,
+            f,
+            Dumper=MkdocsDumper,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False,
+            width=120,
+        )
 
     return yml_path
 
