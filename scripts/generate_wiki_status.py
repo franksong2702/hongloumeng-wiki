@@ -65,7 +65,6 @@ def render(root: Path) -> str:
     files = all_files(root)
     md_files = sorted(path for path in files if path.suffix == ".md")
     product = [path for path in md_files if classify_markdown(path, root) == "product"]
-    raw = [path for path in md_files if classify_markdown(path, root) == "raw"]
     maintenance = [path for path in md_files if classify_markdown(path, root) == "maintenance"]
     counts = directory_counts(root)
     updated = release_date(root)
@@ -102,16 +101,16 @@ tags: [hongloumeng, maintenance, generated]
 
 # 红楼梦 Wiki 当前状态
 
-> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；GitHub Actions 会拒绝与当前目录不一致的状态页。
+> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；GitHub Actions 会拒绝与发布仓库不一致的状态页。
 
 ## 管理口径
 
 | 口径 | 数量 |
 |---|---:|
 | 成品 Wiki Markdown | {len(product)} |
-| raw/ 原始文本 Markdown | {len(raw)} |
-| 成品 + raw 管理口径 | {len(product) + len(raw)} |
 | 维护/审查 Markdown | {len(maintenance)} |
+
+`raw/` 是本地可选的原始资料目录，不进入 Git 仓库，因此不纳入这张可复现的发布状态表；本地管理口径见维护审查报告。
 
 ## 读者内容
 
