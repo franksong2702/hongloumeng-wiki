@@ -82,6 +82,7 @@ SKIP_FILES = {
 SKIP = SKIP_DIRS | SKIP_FILES
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico"}
+STATIC_EXTENSIONS = IMAGE_EXTENSIONS | {".css", ".js"}
 ROOT_PATH_NAMES = set(DIR_NAMES) | {"images"}
 
 
@@ -104,7 +105,7 @@ def collect_source_files(src_root):
             if should_skip_file(filename):
                 continue
             suffix = os.path.splitext(filename)[1].lower()
-            if filename.endswith(".md") or suffix in IMAGE_EXTENSIONS:
+            if filename.endswith(".md") or suffix in STATIC_EXTENSIONS:
                 source = os.path.join(root, filename)
                 files.add(os.path.relpath(source, src_root).replace("\\", "/"))
     return files
@@ -325,7 +326,7 @@ def copy_and_convert(src_root, dst_root):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
 
             # 图片等静态资源直接复制，不转换
-            if os.path.splitext(fname)[1].lower() in IMAGE_EXTENSIONS:
+            if os.path.splitext(fname)[1].lower() in STATIC_EXTENSIONS:
                 with open(src, "rb") as f_in, open(dst, "wb") as f_out:
                     f_out.write(f_in.read())
                 converted_files.append(src_rel)
@@ -455,7 +456,7 @@ def generate_nav(docs_root):
         {
             "开始阅读": [
                 require_nav_page("首页", "index.md", docs_root),
-                require_nav_page("新手入口", "START_HERE.md", docs_root),
+                require_nav_page("完整阅读入口", "START_HERE.md", docs_root),
                 require_nav_page("速读指南", "outputs/红楼梦速读指南.md", docs_root),
                 require_nav_page("分阶段阅读路线", "outputs/红楼梦阅读路线.md", docs_root),
                 require_nav_page("研究型阅读路线", "outputs/红楼梦研究型阅读路线.md", docs_root),
@@ -502,6 +503,7 @@ def generate_nav(docs_root):
         },
         {
             "查阅与关于": [
+                require_nav_page("当前状态", "WIKI_STATUS.md", docs_root),
                 require_nav_page("研究路线图", "ROADMAP.md", docs_root),
                 require_nav_page("Wiki Schema", "SCHEMA.md", docs_root),
                 require_nav_page("更新日志", "log.md", docs_root),
@@ -516,7 +518,7 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
     """写入 mkdocs.yml 配置文件。"""
     config = {
         "site_name": "红楼梦 Wiki",
-        "site_description": "红楼梦 Obsidian Wiki — 120 回章节导读、105 个人物、52 个红学专题",
+        "site_description": "红楼梦人物、事件、空间、原文与红学研究的交叉阅读站",
         "site_author": "红楼梦 Wiki 团队",
         "repo_url": "https://github.com/franksong2702/hongloumeng-wiki",
         "repo_name": "franksong2702/hongloumeng-wiki",
@@ -558,6 +560,11 @@ def write_mkdocs_config(nav, dst_dir, docs_root):
         },
 
         "nav": nav,
+        "extra_css": ["stylesheets/reader.css"],
+        "extra_javascript": [
+            "https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js",
+            "javascripts/mermaid-init.js",
+        ],
         # 长尾文章通过分类索引和全文搜索进入，避免把 700+ 条目塞进左侧导航。
         # not_in_nav 仅抑制“有意不入侧栏”的提示，不影响页面构建、直链或搜索收录。
         "not_in_nav": """/characters/**

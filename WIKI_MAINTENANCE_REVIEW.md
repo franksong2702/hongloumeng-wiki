@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki 维护审查与收尾报告
 created: 2026-07-08
-updated: 2026-07-10
+updated: 2026-07-12
 status: final
 type: maintenance-review
 owner: 学夫
@@ -31,11 +31,11 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 | 项目 | 当前值 |
 |---|---:|
-| 成品 Wiki Markdown | 828 |
+| 成品 Wiki Markdown | 831 |
 | raw/ 原始文本 Markdown | 121 |
-| 成品+raw 管理口径 | 949 |
+| 成品+raw 管理口径 | 952 |
 | 维护/审查 Markdown | 4 |
-| 全部 Markdown | 953 |
+| 全部 Markdown | 956 |
 | ERROR | 0 |
 | WARN | 0 |
 

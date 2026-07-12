@@ -26,7 +26,7 @@ tags: [hongloumeng, meta, agent]
 | `concepts/` | 38 | 主题概念 | 概念说明 + 阅读视角 + 关键章节 |
 | `locations/` | 21 | 地点空间 | 空间说明 + 居住者/功能 + 相关章节 |
 | `poetry/` | 12 | 诗词曲文 | 文本位置 + 赏析 + 人物/主题关系 |
-| `redology/` | 52 | 红学研究 | 学术定位 + 代表著作 + 核心论点 + 红学史地位 |
+| `redology/` | 53 | 红学研究 | 证据分层 + 学术定位 + 代表著作 + 核心论点 |
 | `background/` | 7 | 文化背景 | 制度介绍 + 小说对应 + 阅读视角 |
 | `families/` | 5 | 四大家族 | 谱系 + 关键人物 + 家族关系 |
 | `motifs-symbols/` | 6 | 意象物象 | 意象功能 + 叙事功能 + 关键章节 |
@@ -37,7 +37,7 @@ tags: [hongloumeng, meta, agent]
 | `images/` | 26 | AI 插图 | 人物肖像16 + 场景图9 + 四季图1 |
 | `templates/` | 2 | 页面模板 | chapter-template, character-template |
 
-**总文件数：829（成品 Wiki Markdown，不含 `raw/`）**
+**总文件数：831（成品 Wiki Markdown，不含 `raw/`）**
 
 ## 2. 当前状态快照
 

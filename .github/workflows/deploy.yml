@@ -27,6 +27,12 @@ jobs:
       - name: Verify Wiki maintenance
         run: python scripts/wiki_health_check.py --strict
 
+      - name: Verify generated Wiki status
+        run: python scripts/generate_wiki_status.py --check
+
+      - name: Verify external sources
+        run: python scripts/external_link_check.py --strict
+
       - name: Verify MkDocs strict build
         run: python scripts/mkdocs_build_check.py
 

@@ -60,6 +60,7 @@ FRONTMATTER_ROOT_SCOPE = {
     "ROADMAP.md",
     "START_HERE.md",
     "index.md",
+    "WIKI_STATUS.md",
 }
 
 FRONTMATTER_REQUIRED_FIELDS = [
@@ -163,6 +164,7 @@ COUNT_DIRS = [
 SELF_DESCRIPTION_DOCS = [
     "README.md",
     "index.md",
+    "WIKI_STATUS.md",
     "ROADMAP.md",
     "AGENTS.md",
     "outputs/红楼梦编译总评.md",
@@ -174,6 +176,7 @@ RELEASE_LOG_DOC = "log.md"
 RELEASE_LOG_PATHS = [
     "index.md",
     "START_HERE.md",
+    "WIKI_STATUS.md",
     "ROADMAP.md",
     "chapters",
     "characters",
@@ -190,6 +193,8 @@ RELEASE_LOG_PATHS = [
     "queries",
     "outputs",
     "scripts/build_mkdocs.py",
+    "scripts/generate_wiki_status.py",
+    "scripts/external_link_check.py",
     "scripts/mkdocs_build_check.py",
     "scripts/wiki_health_check.py",
     ".github/workflows/deploy.yml",
@@ -210,6 +215,16 @@ LOCATION_READER_HEADINGS = (
     "## 关键事件现场",
     "## 推荐回读",
     "## 继续阅读",
+)
+
+CORE_CHAPTER_EDITORIAL = {
+    f"chapters/第{number:03d}回.md"
+    for number in (1, 3, 5, 6, 13, 17, 18, 23, 27, 32, 33, 34, 40, 41, 52, 56, 63, 66, 69, 74, 77, 78, 96, 97, 98, 105, 120)
+}
+CORE_CHAPTER_REQUIRED_HEADINGS = ("## 本回辨识", "## 原文回读")
+CORE_CHAPTER_FORBIDDEN_PHRASES = (
+    "再回到“出场人物”“相关概念”核对人物关系和主题线索",
+    "若时间有限，可把本回放入相邻章节连续阅读",
 )
 
 RELATIONSHIP_GUIDE_DOC = "outputs/人物关系阅读指南.md"
@@ -1083,6 +1098,78 @@ def section_body(text: str, heading: str) -> str:
     return text[body_start : body_start + next_heading.start()]
 
 
+def check_core_chapter_editorial(root: Path) -> tuple[list[Finding], dict[str, int]]:
+    """要求核心回目具备可辨识的编辑层，避免回退为批量套话和泛化标签。"""
+    findings: list[Finding] = []
+    stats = Counter()
+    source_anchor_pattern = re.compile(r"texts/simplified/第\d{3}回\.md#\^hlm-")
+    concept_pattern = re.compile(r"/concepts/([^\]|#]+)\.md")
+
+    for rel_path in sorted(CORE_CHAPTER_EDITORIAL):
+        path = root / rel_path
+        stats["scanned"] += 1
+        if not path.exists():
+            findings.append(Finding("ERROR", "core_chapter_missing", rel_path, None, "核心回目文件不存在"))
+            continue
+        text = read_text(path)
+        for heading in CORE_CHAPTER_REQUIRED_HEADINGS:
+            if heading not in text:
+                findings.append(Finding("ERROR", "core_chapter_heading_missing", rel_path, None, f"缺少 {heading}"))
+        for phrase in CORE_CHAPTER_FORBIDDEN_PHRASES:
+            if phrase in text:
+                findings.append(Finding("ERROR", "core_chapter_template_phrase", rel_path, None, f"仍含批量套话：{phrase}"))
+        anchors = len(source_anchor_pattern.findall(text))
+        if anchors < 1:
+            findings.append(Finding("ERROR", "core_chapter_source_anchor_missing", rel_path, None, "缺少简体原文精确锚点"))
+        else:
+            stats["with_source_anchor"] += 1
+        concepts = set(concept_pattern.findall(text))
+        if len(concepts) > 5:
+            findings.append(Finding("ERROR", "core_chapter_concepts_noisy", rel_path, None, f"相关概念 {len(concepts)} 个，应收敛到 5 个以内"))
+        else:
+            stats["concepts_curated"] += 1
+
+    if not findings:
+        stats["ok"] += 1
+    return findings, dict(stats)
+
+
+def check_research_evidence_layers(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """要求研究综述/精读页区分原文事实、二手研究与 Wiki 综合。"""
+    findings: list[Finding] = []
+    stats = Counter()
+    source_anchor_pattern = re.compile(r"texts/simplified/第\d{3}回\.md#\^hlm-")
+    source_block_pattern = re.compile(r"(?ms)^sources:\s*\n((?:\s+-\s+.+\n?)+)")
+
+    for path in product_md:
+        r = rel(path, root)
+        if not r.startswith("redology/") or not path.name.endswith(("研究综述.md", "精读.md")):
+            continue
+        stats["scanned"] += 1
+        text = read_text(path)
+        block = section_body(text, "## 证据分层")
+        if not block:
+            findings.append(Finding("ERROR", "research_evidence_section_missing", r, None, "缺少“## 证据分层”"))
+            continue
+        for label in ("**原文事实**", "**研究观点**", "**Wiki 判断**"):
+            if label not in block:
+                findings.append(Finding("ERROR", "research_evidence_label_missing", r, None, f"证据分层缺少 {label}"))
+        if not source_anchor_pattern.search(block):
+            findings.append(Finding("ERROR", "research_primary_anchor_missing", r, None, "证据分层中缺少直接原文锚点"))
+        else:
+            stats["with_primary_anchor"] += 1
+        source_match = source_block_pattern.search(text)
+        source_block = source_match.group(1) if source_match else ""
+        if not source_block or not ("http://" in source_block or "https://" in source_block or "《" in source_block):
+            findings.append(Finding("ERROR", "research_secondary_source_missing", r, None, "sources: 缺少可识别的外部文章或著作"))
+        else:
+            stats["with_secondary_source"] += 1
+
+    if not findings:
+        stats["ok"] += 1
+    return findings, dict(stats)
+
+
 def wikilink_targets(text: str) -> set[str]:
     return {
         normalize_wiki_target(match.group(1))
@@ -1635,6 +1722,8 @@ def main() -> int:
         ("event_source_anchor_coverage", lambda: check_event_source_anchor_coverage(root, product_md)),
         ("placeholders", lambda: check_placeholders(root, product_md)),
         ("thin_pages", lambda: check_thin_pages(root, product_md)),
+        ("core_chapter_editorial", lambda: check_core_chapter_editorial(root)),
+        ("research_evidence_layers", lambda: check_research_evidence_layers(root, product_md)),
         ("location_reader_structure", lambda: check_location_reader_structure(root, product_md)),
         ("relationship_reading_surface", lambda: check_relationship_reading_surface(root, product_md)),
         ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),

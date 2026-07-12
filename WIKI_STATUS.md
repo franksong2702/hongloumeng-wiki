@@ -1,0 +1,57 @@
+---
+title: 红楼梦 Wiki 当前状态
+created: 2026-07-12
+updated: 2026-07-12
+type: meta
+book: 红楼梦
+status: generated
+tags: [hongloumeng, maintenance, generated]
+---
+
+# 红楼梦 Wiki 当前状态
+
+> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；GitHub Actions 会拒绝与当前目录不一致的状态页。
+
+## 管理口径
+
+| 口径 | 数量 |
+|---|---:|
+| 成品 Wiki Markdown | 831 |
+| raw/ 原始文本 Markdown | 121 |
+| 成品 + raw 管理口径 | 952 |
+| 维护/审查 Markdown | 4 |
+
+## 读者内容
+
+| 模块 | Markdown |
+|---|---:|
+| 章节导读 | 120 |
+| 简体原文 | 120 |
+| 繁体原文 | 120 |
+| 人物 | 106 |
+| 事件 | 181 |
+| 概念 | 38 |
+| 地点 | 21 |
+| 诗词 | 12 |
+| 红学与研究 | 53 |
+| 背景 | 7 |
+| 图谱 | 6 |
+| 时间线 | 3 |
+| 家族 | 5 |
+| 意象 | 6 |
+| 查询索引 | 9 |
+| 输出产品 | 14 |
+
+## 质量闸门
+
+- 严格健康检查：`python3 scripts/wiki_health_check.py --strict`
+- 状态页一致性：`python3 scripts/generate_wiki_status.py --check`
+- 外部来源检查：`python3 scripts/external_link_check.py --strict`
+- 静态站构建：`python3 scripts/mkdocs_build_check.py`
+
+## 阅读入口
+
+- [[02_Learn/08_book-wikis/红楼梦/index.md|站点首页]]
+- [[02_Learn/08_book-wikis/红楼梦/START_HERE.md|完整阅读入口]]
+- [[02_Learn/08_book-wikis/红楼梦/log.md|发布日志]]
+- [[02_Learn/08_book-wikis/红楼梦/redology/证据使用规范.md|证据使用规范]]
