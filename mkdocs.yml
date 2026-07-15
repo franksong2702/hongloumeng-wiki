@@ -1,0 +1,153 @@
+site_name: 红楼梦 Wiki
+site_description: 红楼梦人物、事件、空间、原文与红学研究的交叉阅读站
+site_author: 红楼梦 Wiki 团队
+repo_url: https://github.com/franksong2702/hongloumeng-wiki
+repo_name: franksong2702/hongloumeng-wiki
+docs_dir: .
+site_dir: ../_site
+theme:
+  name: material
+  language: zh
+  features:
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.sections
+  - navigation.path
+  - navigation.top
+  - navigation.tracking
+  - search.highlight
+  - search.share
+  - search.suggest
+  - content.tabs.link
+  - content.code.copy
+  palette:
+  - media: '(prefers-color-scheme: light)'
+    scheme: default
+    toggle:
+      icon: material/brightness-7
+      name: 切换到暗色模式
+  - media: '(prefers-color-scheme: dark)'
+    scheme: slate
+    toggle:
+      icon: material/brightness-4
+      name: 切换到亮色模式
+  icon:
+    repo: fontawesome/brands/github
+nav:
+- 开始阅读:
+  - 首页: index.md
+  - 完整阅读入口: START_HERE.md
+  - 速读指南: outputs/红楼梦速读指南.md
+  - 分阶段阅读路线: outputs/红楼梦阅读路线.md
+  - 研究型阅读路线: outputs/红楼梦研究型阅读路线.md
+- 人物与情节:
+  - 人物索引: queries/人物索引.md
+  - 事件索引: queries/事件索引.md
+  - 人物关系阅读指南: outputs/人物关系阅读指南.md
+  - 人物手册: outputs/红楼梦人物手册.md
+  - 金陵十二钗手册: outputs/金陵十二钗研究手册.md
+  - 人物关系图: maps/人物关系图.md
+- 主题与研究:
+  - 主题导读: outputs/红楼梦主题导读.md
+  - 红学争议导览: outputs/红学争议导览.md
+  - 概念索引: queries/概念索引.md
+  - 诗词索引: queries/诗词索引.md
+  - 红学大家索引: redology/红学大家索引.md
+  - 意象:
+    - 海棠: motifs-symbols/海棠.md
+    - 石头: motifs-symbols/石头.md
+    - 芙蓉: motifs-symbols/芙蓉.md
+    - 通灵宝玉: motifs-symbols/通灵宝玉.md
+    - 金锁: motifs-symbols/金锁.md
+    - 风月宝鉴: motifs-symbols/风月宝鉴.md
+  - 历史与制度背景:
+    - 丫鬟制度: background/丫鬟制度.md
+    - 佛道思想: background/佛道思想.md
+    - 园林文化: background/园林文化.md
+    - 婚姻制度: background/婚姻制度.md
+    - 服饰饮食: background/服饰饮食.md
+    - 清代家族制度: background/清代家族制度.md
+    - 科举与仕途: background/科举与仕途.md
+  - 更多阅读产品:
+    - 人物事件线剩余人物审查: outputs/人物事件线剩余人物审查.md
+    - 海棠诗社图文对照: outputs/海棠诗社图文对照.md
+    - 第005回判词与红楼梦曲逐句精读: outputs/第005回判词与红楼梦曲逐句精读.md
+    - 红楼梦关键词索引: outputs/红楼梦关键词索引.md
+    - 红楼梦编译总评: outputs/红楼梦编译总评.md
+- 空间、家族与时间:
+  - 大观园空间阅读手册: outputs/大观园空间阅读手册.md
+  - 图谱:
+    - 大观园建筑实体表: maps/大观园建筑实体表.md
+    - 大观园空间图: maps/大观园空间图.md
+    - 第017回游园路线图: maps/第017回游园路线图.md
+    - 第074回抄检路线图: maps/第074回抄检路线图.md
+    - 贾府结构图: maps/贾府结构图.md
+  - 地点索引: queries/地点索引.md
+  - 家族:
+    - 史家: families/史家.md
+    - 王家: families/王家.md
+    - 甄家: families/甄家.md
+    - 薛家: families/薛家.md
+    - 贾家: families/贾家.md
+  - 时间线:
+    - 全书时间线: timelines/全书时间线.md
+    - 宝黛钗关系时间线: timelines/宝黛钗关系时间线.md
+    - 贾府兴衰时间线: timelines/贾府兴衰时间线.md
+- 章节与原文:
+  - 回目索引: queries/回目索引.md
+  - 简体原文索引: queries/简体原文索引.md
+  - 繁体原文索引: queries/繁体原文索引.md
+  - 原文锚点索引: queries/原文锚点索引.md
+- 查阅与关于:
+  - 当前状态: WIKI_STATUS.md
+  - 研究路线图: ROADMAP.md
+  - Wiki Schema: SCHEMA.md
+  - 更新日志: log.md
+extra_css:
+- stylesheets/reader.css
+extra_javascript:
+- https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js
+- javascripts/mermaid-init.js
+not_in_nav: '/characters/**
+
+  /events/**
+
+  /concepts/**
+
+  /locations/**
+
+  /poetry/**
+
+  /redology/**
+
+  !/redology/红学大家索引.md
+
+  /chapters/**
+
+  /texts/**'
+markdown_extensions:
+- tables
+- fenced_code
+- attr_list
+- md_in_html
+- def_list
+- footnotes
+- admonition
+- pymdownx.details
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format ''
+- toc:
+    permalink: true
+plugins:
+- search:
+    lang:
+    - zh
+    separator: '[\s\-,:!=\[\]()\"''/]+'
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/franksong2702/hongloumeng-wiki
+    name: GitHub 仓库

@@ -1,0 +1,32 @@
+/* Reader-facing overflow rules for narrow screens. */
+.md-content,
+.md-content__inner,
+.md-typeset {
+  min-width: 0;
+}
+
+.md-typeset a,
+.md-typeset code:not(pre code),
+.md-typeset td,
+.md-typeset th {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.md-typeset pre,
+.md-typeset .mermaid {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset h1 {
+    font-size: 1.75rem;
+  }
+
+  .md-typeset table:not([class]) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
