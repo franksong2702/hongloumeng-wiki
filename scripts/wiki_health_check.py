@@ -24,7 +24,7 @@ import subprocess
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Iterable
 from urllib.parse import unquote
 
@@ -458,6 +458,20 @@ def infer_vault_root(root: Path) -> Path | None:
     return Path(s[:idx])
 
 
+def path_is_within(path: Path, boundary: Path) -> bool:
+    """Return whether a resolved path stays within the resolved boundary."""
+    return path == boundary or boundary in path.parents
+
+
+def is_absolute_local_source(value: str) -> bool:
+    """Reject POSIX, Windows, home-relative, and file-URI machine paths."""
+    return (
+        Path(value).is_absolute()
+        or PureWindowsPath(value).is_absolute()
+        or value.startswith(("~/", "~\\", "file://"))
+    )
+
+
 def normalize_wiki_target(target: str) -> str:
     target = target.strip()
     if "|" in target:
@@ -665,11 +679,13 @@ def check_frontmatter_sources(root: Path, product_md: list[Path]) -> tuple[list[
     """校验 `sources:` 中可识别的本地路径，并约束繁体原文的公开来源。
 
     外部 URL 的可访问性由 `external_link_check.py` 负责；这里仅保证本地路径
-    在当前 Vault 中真实存在，并防止发布用繁体原文再次指向机器私有目录。
+    位于当前 Wiki 或可可靠推断的 Vault 边界内，并防止发布内容指向机器私有目录。
     """
     findings: list[Finding] = []
     stats = Counter()
     vault_root = infer_vault_root(root)
+    wiki_boundary = root.resolve()
+    vault_boundary = vault_root.resolve() if vault_root is not None else None
     external_schemes = ("http://", "https://", "doi:")
 
     for path in product_md:
@@ -713,14 +729,43 @@ def check_frontmatter_sources(root: Path, product_md: list[Path]) -> tuple[list[
                 stats["descriptive_skipped"] += 1
                 continue
 
+            if is_absolute_local_source(clean_value):
+                stats["local_absolute"] += 1
+                findings.append(
+                    Finding(
+                        "ERROR",
+                        "frontmatter_source_absolute_path",
+                        rel(path, root),
+                        None,
+                        f"sources 不允许绝对或用户目录路径: {value}",
+                    )
+                )
+                continue
+
+            allowed_boundary = wiki_boundary
             if clean_value.startswith(WIKI_PREFIX):
                 candidate = root / clean_value[len(WIKI_PREFIX) :]
             elif clean_value.startswith("02_Learn/") and vault_root is not None:
                 candidate = vault_root / clean_value
+                allowed_boundary = vault_boundary
             elif clean_value.startswith(("../", "./")):
                 candidate = path.parent / clean_value
             else:
                 candidate = root / clean_value
+
+            resolved_candidate = candidate.resolve(strict=False)
+            if allowed_boundary is None or not path_is_within(resolved_candidate, allowed_boundary):
+                stats["local_outside_boundary"] += 1
+                findings.append(
+                    Finding(
+                        "ERROR",
+                        "frontmatter_source_outside_boundary",
+                        rel(path, root),
+                        None,
+                        f"sources 本地路径越出允许边界 {allowed_boundary}: {value}",
+                    )
+                )
+                continue
 
             if candidate.exists():
                 stats["local_ok"] += 1
@@ -1893,7 +1938,7 @@ def render_report(
                 "- chapter_key_event_link_unlocalized 表示章节页“关键事件”链接到事件页，但该事件页没有声明对应回目；通常应补事件页定位或移除误链。",
                 "- source_anchor_not_in_body/source_anchor_duplicate 表示原文 block anchor 不在小说正文段落或重复；这会导致事件页跳转不到真正正文现场，属于 ERROR。",
                 "- source_anchor_reference_missing 表示页面链接到了不存在的原文 block anchor；链接文件存在但无法精确跳转，属于 ERROR。",
-                "- frontmatter_source_local_missing 表示 `sources:` 声明了本地文件但目标不存在；traditional_source_external_missing 表示繁体发布原文缺少可公开复核的来源 URL。",
+                "- frontmatter_source_absolute_path/frontmatter_source_outside_boundary 表示 `sources:` 指向绝对机器路径或真实路径越出 Wiki/Vault 边界；frontmatter_source_local_missing 表示边界内本地目标不存在；traditional_source_external_missing 表示繁体发布原文缺少可公开复核的来源 URL。",
                 "- event_source_anchor_missing 表示事件页没有提供 `texts/simplified/第xxx回.md#^hlm-*` 精确正文锚点；若已有“原文锚点”区块则先作为 WARN。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
                 "- location_flat_chapter_list 表示地点页把超过 8 个回目平铺为“相关章节”；应改为有解释的关键事件现场和推荐回读。",
