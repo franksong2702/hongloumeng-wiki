@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki 维护审查与收尾报告
 created: 2026-07-08
-updated: 2026-07-12
+updated: 2026-07-14
 status: final
 type: maintenance-review
 owner: 学夫
@@ -12,22 +12,22 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 
 # 红楼梦 Wiki 维护审查与收尾报告
 
-> 本文档是 `[[02_Learn/08_book-wikis/红楼梦]]` 本轮维护的收尾交接。
+> **历史收尾报告，不是当前状态页。** 本文记录 2026-07-08 至 2026-07-12 的维护过程与当时证据；动态数量和当前闸门以[[02_Learn/08_book-wikis/红楼梦/WIKI_STATUS.md|自动状态页]]、[[02_Learn/08_book-wikis/红楼梦/MAINTENANCE.md|维护机制]]及实时命令为准。
 > 2026-07-08 的初始审查认为：这个 Wiki 已有结构基础，但缺少可重复运行的健康检查与分阶段维护机制。
-> 截至 2026-07-10，本轮已经完成机制建设、机械修复、链接规范、内容补强、人物事件线与七次小专题端到端抽查。
+> 截至该轮收尾，已完成机制建设、机械修复、链接规范、内容补强、人物事件线与多次小专题端到端抽查。
 
 ## 1. 一句话结论
 
-当前红楼梦 Wiki 已经从“靠人工感觉维护”变成“可用脚本验证的分层维护系统”：
+截至该轮收尾，红楼梦 Wiki 已经从“靠人工感觉维护”变成“可用脚本验证的分层维护系统”：
 
 - `scripts/wiki_health_check.py --strict` 返回 `exit 0`；
 - 当前健康检查为 `ERROR 0 / WARN 0`；
 - wikilink、正文锚点引用、事件页正文锚点覆盖、薄页检查均无发现项；
 - `raw/` 仍按既定策略作为未跟踪原始文本层保留，不纳入本轮提交。
 
-## 2. 当前健康状态
+## 2. 2026-07-10 健康快照
 
-本节以 2026-07-10 重新运行的本地严格健康检查为准。
+本节保留 2026-07-10 当时的本地严格健康检查结果，不随当前 Wiki 继续回写。
 
 | 项目 | 当前值 |
 |---|---:|
@@ -103,7 +103,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - 已修复 [[scripts/build_mkdocs.py]] 的静态转换逻辑：跳过自身输出目录、raw/、模板和维护文档；把根目录路径、短名链接、图片链接与 `#^block-anchor` 统一解析为存在的相对目标；不会再把图片误写为 `.png.md`，也不会把 `.md` 错加到锚点末尾；
 - 对源文件实际引用的普通标题锚点，生成页会补兼容 id；历史 `#L33` 一类行号坐标没有稳定网页锚点，静态站只跳到对应原文页，不伪造一个必坏锚点；
 - 修正 [[redology/护官符与官场秩序研究综述.md]] 中两处 `hlg-004-hulu-an` 错拼为现存的 `hlm-004-hulu-an`；
-- 新增 [[scripts/mkdocs_build_check.py]]：先转换、再运行 `mkdocs build --strict`，并保存 `_mkdocs_build/mkdocs-strict-build.log`；当前转换 851 个读者站文件，严格构建返回 `exit 0`，MkDocs 链接/导航诊断为 0；
+- 新增 [[scripts/mkdocs_build_check.py]]：先转换、再运行 `mkdocs build --strict`，并保存 `_mkdocs_build/mkdocs-strict-build.log`；该轮当时转换 851 个读者站文件，严格构建返回 `exit 0`，MkDocs 链接/导航诊断为 0；
 - 启用 Material 原生 Mermaid 转换；[[maps/人物关系图.md]]、[[maps/贾府结构图.md]] 的图块会生成 `class="mermaid"` 容器而非代码高亮块；
 - 将静态站导航重组为六个读者入口，并移除 `navigation.expand`；新增 tabs、面包屑和“导航入口不重复”的构建期检查，人物、事件、章节等长尾页面改由分类索引与全文搜索进入；
 - 将 [[log.md]] 定义为读者发布日志，并把日志新鲜度检查接入 [[scripts/wiki_health_check.py]] 与 GitHub Pages 工作流；
@@ -234,9 +234,9 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 - `WIKI_MAINTENANCE_REVIEW.md`：原为未跟踪的初始审查草稿；该历史状态发生在本文件纳入 Git 之前。
 - `raw/`：仍是未跟踪原始文本层。本轮策略是不纳入 Git、不移动、不删除、不新增 `.gitignore`。未来如要处理，应单独开一阶段讨论。
 
-### 当前 Git 边界
+### 当时发布仓库的 Git 边界
 
-截至 2026-07-10，本维护报告已随 `372eb84 Audit Lin Ruhai reading path` 纳入 Git；工作区唯一保留的未跟踪项是 `raw/`。该目录继续按既定策略保留在版本控制之外。
+截至 2026-07-10，原发布仓库中的本维护报告已随 `372eb84 Audit Lin Ruhai reading path` 纳入 Git；当时工作区唯一保留的未跟踪项是 `raw/`。当前 iCloud Vault 副本不一定带 Git 元数据，不能从本段推断当前工作区状态。
 
 ## 5. 后续维护方法
 
@@ -262,7 +262,7 @@ tags: [hongloumeng, maintenance, health-check, phase-3q]
 ```text
 你正在维护 Obsidian vault 中的 `02_Learn/08_book-wikis/红楼梦` Wiki。
 
-当前状态以 `WIKI_MAINTENANCE_REVIEW.md` 和 `MAINTENANCE.md` 为准。不要依赖 2026-07-08 初始审查里的旧数字。
+当前状态以 `WIKI_STATUS.md`、`MAINTENANCE.md`、`AGENTS.md` 和实时命令为准；本文件只用于理解历史维护过程。
 
 开始前必须运行：
 python3 scripts/wiki_health_check.py --strict --output /tmp/hongloumeng_wiki_health_check.txt
@@ -270,7 +270,7 @@ python3 scripts/wiki_health_check.py --strict --output /tmp/hongloumeng_wiki_hea
 如果结果是 ERROR 0 / WARN 0，请不要做全库“顺手优化”。只在用户明确指定的小范围内修改。
 
 特别注意：
-- `raw/` 是未跟踪原始文本层，本轮维护策略是不纳入 Git、不移动、不删除。
+- `raw/` 在原发布仓库中是未跟踪原始文本层；在当前 Vault 中仍只作为本地可选采集证据，不作为发布依赖。
 - 事件页必须尽量提供 `texts/simplified/第xxx回.md#^hlm-*` 原文锚点。
 - 诗词、人物、事件、地点页的补强目标是提升导航能力，不是写泛泛赏析。
 - 提交前必须运行 `python3 scripts/wiki_health_check.py --strict` 和 `git diff --check`。

@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki 维护机制
 created: 2026-07-08
-updated: 2026-07-10
+updated: 2026-07-14
 type: maintenance-guide
 book: 红楼梦
 status: active
@@ -10,196 +10,160 @@ tags: [hongloumeng, maintenance, health-check, obsidian]
 
 # 红楼梦 Wiki 维护机制
 
-> 目标：让 `[[02_Learn/08_book-wikis/红楼梦]]` 的维护从“凭感觉看一遍”变成“先体检、再分批修复、最后留下证据”。
-
-本文是维护入口；审查背景见 `[[WIKI_MAINTENANCE_REVIEW.md]]`。
+> 这是当前维护 SOP。动态数量只看[[02_Learn/08_book-wikis/红楼梦/WIKI_STATUS.md|自动状态页]]；2026-07-08 至 2026-07-12 的阶段过程保存在[[02_Learn/08_book-wikis/红楼梦/WIKI_MAINTENANCE_REVIEW.md|维护收尾报告]]。
 
 ## 1. 维护原则
 
-1. **先体检，后改正文**：每次维护先运行健康检查，确认问题类型和数量。
-2. **分阶段，不混批**：脚本、机械修复、链接系统、内容补强分开做。
-3. **只修本阶段问题**：不要在修链接时顺手改文风，不要在补 frontmatter 时顺手重写人物页。
-4. **统计口径先写清**：`raw/` 原始文本层和成品 Wiki 层分开计数。
-5. **每次完成留三件套**：
+1. **先验证，后修改**：先确认当前错误类型，再决定是否动正文。
+2. **一次只处理一个问题面**：内容、元数据、链接、脚本和站点机制分批处理。
+3. **动态事实只有一个来源**：数量写入 `WIKI_STATUS.md`，其他文档只链接，不手抄。
+4. **结构健康不等于文学正确**：脚本负责发现机械问题，人物判断、红学争议和文本解释仍需人工复核。
+5. **发布内容必须可复核**：原文有公开来源，事件有正文锚点，研究页区分三层证据。
 
-```text
-验证命令: <原样命令>
-返回结果: <exit code / 关键输出行>
-证据路径: <日志/截图/报告文件/PR 链接>
+## 2. 两种运行环境
+
+### Obsidian Vault 副本
+
+当前 Wiki 可能位于不带 `.git` 的 iCloud Vault 中。此时：
+
+- 可以运行全部内容与构建检查；
+- `generate_wiki_status.py` 使用 `log.md` 最新发布日期，保证跨天可重复；
+- 不报告分支、提交、工作区或部署状态；
+- 不执行 GitHub Pages 部署。
+
+### 发布仓库
+
+只有以下命令成功时，才进入 Git 工作流：
+
+```bash
+git rev-parse --show-toplevel
 ```
 
-## 2. 统计口径
+在发布仓库中，状态页日期取待提交状态或最新提交日期；读者内容发生变化时必须同步更新 `log.md`，再提交和部署。
 
-后续报告统一使用四个口径：
+## 3. 统计口径
 
-| 口径 | 含义 |
+| 口径 | 定义 |
 |---|---|
-| 成品 Wiki Markdown | 可作为 Wiki 正文、索引、输出产品、维护元文档之外的正式页面；不含 `raw/`、`MAINTENANCE.md`、`WIKI_MAINTENANCE_REVIEW.md`、`scripts/`。 |
-| raw Markdown | `raw/` 下的原始文本层，作为来源或备份层单独统计。 |
-| 成品+raw 管理口径 | 成品 Wiki Markdown + raw Markdown。 |
-| 维护/审查 Markdown | `MAINTENANCE.md`、`WIKI_MAINTENANCE_REVIEW.md` 等维护过程文件，不混入成品总数。 |
+| 成品 Wiki Markdown | 发布与阅读网络中的 Markdown；排除 `raw/`、维护报告和脚本目录 |
+| raw Markdown | `raw/` 下本地可选的采集证据 |
+| 成品 + raw | 本地管理口径，不代表发布仓库文件数 |
+| 维护/审查 Markdown | 维护机制、阶段报告与收尾报告 |
 
-这样可以保留原先“成品层 765”的说法，同时把 `raw/` 的 121 个 Markdown 说清楚。
+具体数量不在此维护，见[[02_Learn/08_book-wikis/红楼梦/WIKI_STATUS.md|自动状态页]]。
 
-## 3. 一键健康检查
+## 4. 四个发布闸门
 
-在 Wiki 根目录运行：
+在 Wiki 根目录运行。
 
-```bash
-python3 scripts/wiki_health_check.py
-```
-
-如需把报告保存为证据：
-
-```bash
-python3 scripts/wiki_health_check.py --output /tmp/hongloumeng_wiki_health_report.txt
-```
-
-如需作为发布前闸门：
+### 4.1 源 Wiki 严格健康检查
 
 ```bash
 python3 scripts/wiki_health_check.py --strict
 ```
 
-说明：
+覆盖：
 
-- 默认模式只负责生成报告，发现问题也返回 `exit 0`，适合当前 Phase 0。
-- `--strict` 模式发现 `ERROR` 会返回 `exit 1`，适合后续 CI 或发布前检查。
-- 脚本不会修改正文；只有显式传入 `--output` 时才会写报告文件。
+- frontmatter 必填字段；
+- `sources:` 本地路径与繁体原文公开来源；
+- Wikilink、Markdown 本地链接和表格链接；
+- 章节—事件定位；
+- 原文锚点落点、唯一性、引用和事件覆盖；
+- 占位句、薄页、关键章节编辑层；
+- 研究页证据分层；
+- 地点与人物关系阅读面；
+- 动态数量、版本一致性、发布日志和人物事件线治理快照。
 
-## 4. 健康检查覆盖范围
+### 4.2 状态页一致性
 
-`scripts/wiki_health_check.py` 当前覆盖：
+修改动态数量或发布批次后：
 
-1. 成品 Markdown、`raw/` Markdown、维护 Markdown、全部 Markdown 的数量；
-2. 各目录 Markdown 数量；
-3. frontmatter 必填字段：`title`、`created`、`updated`、`type`、`book`、`status`；
-4. Obsidian wikilink 是否可解析；
-5. 短名 alias 是否需要规范化；
-6. 本地 Markdown 链接是否有效；
-7. 占位词 / 禁止句式扫描，并排除元文档、模板和 `raw/`；
-8. 按 `type` 分类的薄页检查；
-9. README / index / ROADMAP / AGENTS / 输出总评中的数量自描述是否漂移。
+```bash
+python3 scripts/generate_wiki_status.py
+python3 scripts/generate_wiki_status.py --check
+```
 
-## 5. 静态站严格构建闸门
+第一条显式生成，第二条只读核对。不要手工修改自动状态页中的数量。
 
-健康检查验证的是 Obsidian 源文件；发布前还要验证“转换成普通 Markdown 后，静态站的链接是否仍可用”。在 Wiki 根目录运行：
+### 4.3 外部来源检查
+
+```bash
+python3 scripts/external_link_check.py --strict
+```
+
+- 404/410 是明确失效，严格模式失败；
+- 403、429、TLS、5xx 和超时列为 REVIEW，需要人工判断；
+- 外链检查通过不代表来源学术质量已经可靠。
+
+### 4.4 静态站严格构建
 
 ```bash
 python3 scripts/mkdocs_build_check.py
 ```
 
-该脚本会依次：
+该命令重建 `_mkdocs_build/`，转换 Wikilink、图片、block anchor 与导航，然后执行 `mkdocs build --strict`。构建产物可随时再生，不进入内容编辑。
 
-1. 运行 `scripts/build_mkdocs.py`，在 `_mkdocs_build/docs/` 生成副本；
-2. 将 vault 根路径、短名链接、图片链接和 `#^block-anchor` 转成 MkDocs 可识别的相对链接；
-3. 执行 `mkdocs build --strict`；只要严格构建非零退出，整条命令就非零退出；
-4. 将转换与构建输出写入 `_mkdocs_build/mkdocs-strict-build.log`。
-
-边界：`raw/`、模板和维护文档不属于读者静态站，因此不参与这项构建。历史 `#L33` 这类行号坐标在静态站中没有稳定锚点，会保留“跳到原文页”的链接而不伪造锚点；正文精确定位仍应使用 `#^hlm-...` block anchor。
-
-## 6. 读者发布日志
-
-[[log.md]] 不是逐条复制 Git commit 的开发日志，而是面向读者的发布记录。以下变化必须在同一发布批次中更新 `log.md`：
-
-1. 新增或重组读者的主要阅读路径；
-2. 大批内容补强、原文定位规则或跨页关系发生变化；
-3. MkDocs、导航、搜索或 GitHub Pages 的可见行为发生变化。
-
-`scripts/wiki_health_check.py --strict` 会比较最新日志日期、Git 中的读者可见变动，以及当前待提交改动。三者不同步时会报告 `release_log_*` ERROR，避免日志再次停在旧版本。
-
-## 7. 当前 alias map 起点
-
-Phase 2 前不要盲目批量改短名链接。先用健康检查报告确认短名数量，再按 alias map 统一转换。
-
-初始 alias map：
-
-| 短名 | 规范目标 |
-|---|---|
-| 宝玉 | `characters/贾宝玉.md` |
-| 黛玉 | `characters/林黛玉.md` |
-| 宝钗 | `characters/薛宝钗.md` |
-| 凤姐 | `characters/王熙凤.md` |
-| 探春 | `characters/贾探春.md` |
-| 惜春 | `characters/贾惜春.md` |
-| 迎春 | `characters/贾迎春.md` |
-| 可卿 | `characters/秦可卿.md` |
-
-建议目标格式：
-
-```md
-[[characters/贾宝玉.md|宝玉]]
-```
-
-## 8. 维护阶段
-
-### Phase 0：只读维护基础设施
-
-目标：建立检查能力，不改正文。
-
-交付物：
-
-- `scripts/wiki_health_check.py`
-- `MAINTENANCE.md`
-- 一份健康检查报告
-
-### Phase 1：低风险机械修复
-
-范围：
-
-1. 修复 README 中错误的本地相对链接；
-2. 明确 `765 / 886 / raw 121` 的统计口径；
-3. 修复 README / index / outputs / ROADMAP 中数量不一致；
-4. 补齐缺失的 `updated` frontmatter；
-5. 明确 `raw/` 是否纳入 Git。
-
-### Phase 2：链接系统修复
-
-范围：
-
-1. 固化 alias map；
-2. 把短名链接转成文件级可点击链接；
-3. 再运行 `--strict` 检查断链。
-
-### Phase 3：内容质量补强
-
-范围：
-
-1. 按 `character/event/location/concept/redology` 等 type 分类处理薄页；
-2. 优先补 sources、关系网络、章节抓手和主题分析；
-3. 不做全库统一文风清洗。
-
-## 9. Git 与发布边界
-
-维护前先查看：
-
-```bash
-git status --short
-```
-
-当前已知需要特别注意：
-
-- `README.md` 可能已有未归属改动；
-- `raw/` 可能是未跟踪状态；
-- 当前策略（2026-07-08 Phase 1B-C）：`raw/` 仅作为当前存在的原始文本层在文档和健康检查中单独统计；本轮不纳入 Git、不新增 `.gitignore`、不移动/删除 `raw/`；
-- 未确认前不要部署 GitHub Pages，不要启用自动任务。
-
-## 10. 完成报告模板
-
-每阶段完成后使用：
+## 5. 标准维护流程
 
 ```text
-已完成:
-- <具体文件/脚本/报告>
+1. 运行严格健康检查与状态页核对
+2. 明确本批唯一目标和文件范围
+3. 修改内容并更新 frontmatter.updated
+4. 若影响读者内容、阅读路径或站点机制，更新 log.md
+5. 重新生成 WIKI_STATUS.md
+6. 运行四个发布闸门
+7. 涉及人物事件线时运行两个人物线脚本
+8. 记录结果和未验证项
+```
 
+人物线专项命令：
+
+```bash
+python3 scripts/character_event_line_review.py
+python3 scripts/character_event_reverse_link_check.py
+```
+
+## 6. 来源与 Raw 边界
+
+- `texts/traditional/` 是可发布的繁体原文层，每回 `sources:` 指向公开 Wikisource 页面。
+- `texts/simplified/` 是简体阅读与锚点层，不覆盖繁体原文。
+- `raw/` 如存在，只作为本地采集证据，保持只读；发布仓库和静态站不能依赖它。
+- `sources:` 中引用本地 Wiki 页面时使用真实 Vault 路径；引用公开材料时使用 URL。
+- 任何新增研究来源都要落到实际吸收观点的页面，而不是只写在总综述里。
+
+## 7. 常见失败与处理
+
+| 失败 | 处理 |
+|---|---|
+| `frontmatter_source_local_missing` | 修正或删除不存在的本地来源路径 |
+| `traditional_source_external_missing` | 为繁体原文补公开来源 URL |
+| `wikilink_broken` | 修正目标，不创建空壳页绕过错误 |
+| `source_anchor_reference_missing` | 修正锚点名或把锚点放回真实正文段落 |
+| `event_source_anchor_missing` | 为事件补对应回目的精确正文锚点 |
+| `self_description_*` | 更新自动状态页或删除重复手写数量 |
+| `version_mismatch` | 对齐 README、SCHEMA 与 index 版本 |
+| `release_log_*` | 在同一发布批次更新 `log.md` |
+| MkDocs strict failure | 修改源文件或转换脚本，不手改构建产物 |
+
+## 8. 内容维护策略
+
+当四个闸门均通过时，后续只做目标明确的小切片：
+
+- 一批关键回目的人工精编；
+- 一条人物—事件—原文—概念阅读链；
+- 一组外部来源的人工复核；
+- 一个红学判断的事实与观点分层；
+- 一个明确的站点可用性问题。
+
+不再使用“全库扩写”“统一文风”“为清指标补链接”作为维护任务。
+
+## 9. 完成证据模板
+
+```text
+改动范围: <文件 / 页面类型 / 阅读链>
 验证命令: <原样命令>
-返回结果: <exit code / 关键输出行>
-证据路径: <报告文件或日志路径>
-
-初见审查:
-- 质疑: <一个多疑维护者会问的问题>
-- 回应: <为什么当前处理仍然成立 / 哪些留到下一阶段>
-
-确信度:
-- 高/中/低；如果中或低，说明需要用户确认什么。
+返回结果: <exit code / ERROR / WARN / 关键统计>
+证据路径: <日志、状态页或审查笔记>
+环境边界: <Vault 副本 / Git 发布仓库>
+未验证项: <如无则写无>
 ```

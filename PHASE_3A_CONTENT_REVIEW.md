@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki Phase 3A 内容审查分诊
 created: 2026-07-08
-updated: 2026-07-10
+updated: 2026-07-14
 type: maintenance-report
 book: 红楼梦
 status: historical-snapshot
@@ -10,7 +10,7 @@ tags: [hongloumeng, maintenance, content-review, phase-3a]
 
 # 红楼梦 Wiki Phase 3A 内容审查分诊
 
-> **历史快照，不是当前待办。** 本文记录 2026-07-08 的薄页分诊输入；其 P0/P1/P2 队列已在后续 Phase 3B—3P 中完成处理。当前结构与内容状态应以 [[02_Learn/08_book-wikis/红楼梦/WIKI_MAINTENANCE_REVIEW.md]]、[[02_Learn/08_book-wikis/红楼梦/outputs/人物事件线剩余人物审查.md]] 和最新健康检查为准。
+> **历史快照，不是当前待办。** 本文记录 2026-07-08 的薄页分诊输入；其 P0/P1/P2 队列已在后续 Phase 3B—3P 中完成处理。当前结构与动态数量以[[02_Learn/08_book-wikis/红楼梦/WIKI_STATUS.md|自动状态页]]、[[02_Learn/08_book-wikis/红楼梦/MAINTENANCE.md|维护机制]]、[[02_Learn/08_book-wikis/红楼梦/outputs/人物事件线剩余人物审查.md|人物事件线审查]]和最新健康检查为准。
 
 - 生成时间：2026-07-08 10:50:30
 - 输入报告：`/tmp/hongloumeng_wiki_health_phase3a_input.txt`

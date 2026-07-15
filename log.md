@@ -1,6 +1,30 @@
+---
+title: 红楼梦 Book Wiki Log
+created: 2026-04-27
+updated: 2026-07-15
+type: changelog
+book: 红楼梦
+status: active
+tags: [hongloumeng, changelog, release]
+---
+
 # 红楼梦 Book Wiki Log
 
 > 这是面向读者的发布日志，不逐条复述 Git commit。新记录按时间倒序插入本页顶部；凡是改变公共内容、阅读路径或站点机制的发布，必须在同一批次更新本页。
+
+## 2026-07-15｜发布统计与状态日期可重复性修正
+
+- 公共 README 只保留可发布的 831 个成品 Markdown，不再硬编码仅存在于本地编辑 Vault 的 `raw/` 数量和成品加 raw 管理口径。
+- 自动状态页在 Vault 与发布仓库中统一使用本日志的最新发布日期；只有日志不可用时才回退到 Git 最新提交日期，不再因 dirty 工作区或执行日期变化而跨天误报 stale。
+- 本轮只修正发布统计口径和验证可重复性，没有改写小说正文、人物判断或红学内容。
+
+## 2026-07-14｜v2.2.1 来源与治理文档对齐
+
+- 将 120 回繁体原文的 `sources:` 从已不存在的旧 Vault 路径改为对应的 Wikisource 公开 URL；本地 `raw/` 继续保持只读采集证据，不再成为发布页面依赖。
+- 修复自动状态页在非 Git Obsidian Vault 中跨天误报 stale 的问题：无 Git 时改用本发布日志的最新日期作为稳定发布日期。
+- 扩展严格健康检查：新增本地来源路径、繁体原文公开来源、成品/管理口径和 README—SCHEMA—index 版本一致性检查。
+- 将版本更新至 v2.2.1，重写 [[02_Learn/08_book-wikis/红楼梦/AGENTS.md|Agent 操作手册]]、[[02_Learn/08_book-wikis/红楼梦/MAINTENANCE.md|维护机制]]、[[02_Learn/08_book-wikis/红楼梦/ROADMAP.md|研究路线图]]和[[02_Learn/08_book-wikis/红楼梦/SCHEMA.md|Schema]]，删除 5 月旧阶段、旧路径与重复动态统计。
+- 明确[[02_Learn/08_book-wikis/红楼梦/WIKI_MAINTENANCE_REVIEW.md|维护收尾报告]]是历史快照，并将诗词页遗留的 `type: poetry` 统一为 `type: poem`。
 
 ## 2026-07-12｜读者界面、关键回目与研究证据升级
 

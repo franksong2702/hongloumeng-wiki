@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki 当前状态
 created: 2026-07-12
-updated: 2026-07-12
+updated: 2026-07-15
 type: meta
 book: 红楼梦
 status: generated
@@ -10,7 +10,7 @@ tags: [hongloumeng, maintenance, generated]
 
 # 红楼梦 Wiki 当前状态
 
-> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；GitHub Actions 会拒绝与发布仓库不一致的状态页。
+> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；Vault 与发布仓库统一使用 `log.md` 最新发布日期，只有日志不可用时才回退到 Git 日期，GitHub Actions 会拒绝不一致的状态页。
 
 ## 管理口径
 
@@ -19,7 +19,7 @@ tags: [hongloumeng, maintenance, generated]
 | 成品 Wiki Markdown | 831 |
 | 维护/审查 Markdown | 4 |
 
-`raw/` 是本地可选的原始资料目录，不进入 Git 仓库，因此不纳入这张可复现的发布状态表；本地管理口径见维护审查报告。
+`raw/` 是本地可选的采集证据，不属于公共发布仓库或静态站依赖，因此不纳入这张可复现的发布状态表；本地管理时可与成品数分开统计。
 
 ## 读者内容
 

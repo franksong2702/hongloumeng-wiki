@@ -1,10 +1,10 @@
 ---
 title: 红楼梦 Wiki
 created: 2026-04-27
-updated: 2026-07-12
+updated: 2026-07-14
 type: index
 book: 红楼梦
-version: v2.2.0
+version: v2.2.1
 status: curated-v4
 tags: [book-wiki, 红楼梦, index]
 ---

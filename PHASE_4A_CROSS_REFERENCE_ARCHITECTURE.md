@@ -1,7 +1,7 @@
 ---
 title: 红楼梦 Wiki Phase 4A Cross-reference 内容架构设计
 created: 2026-07-09
-updated: 2026-07-10
+updated: 2026-07-14
 type: maintenance-report
 book: 红楼梦
 status: active
@@ -10,7 +10,7 @@ tags: [hongloumeng, maintenance, cross-reference, phase-4a]
 
 # 红楼梦 Wiki Phase 4A Cross-reference 内容架构设计
 
-> 维护说明（2026-07-10）：本文保留 2026-07-09 的初始诊断，避免丢失设计依据；其中“建议试点”的人物线工作已经完成。当前应把它当作持续实施中的架构原则，而不是一份尚未开始的待办清单。
+> 维护说明（2026-07-14）：本文保留 2026-07-09 的初始诊断，避免丢失设计依据；其中“建议试点”的人物线工作已经完成。当前应把它当作持续实施中的架构原则，而不是一份尚未开始的待办清单。动态总量见[[02_Learn/08_book-wikis/红楼梦/WIKI_STATUS.md|自动状态页]]。
 
 ## 1. 一句话判断
 
@@ -20,7 +20,7 @@ tags: [hongloumeng, maintenance, cross-reference, phase-4a]
 
 ## 2. 当前结构诊断
 
-### 2026-07-10 当前状态（Phase 4E 起点）
+### 2026-07-14 复核基线
 
 | 指标 | 当前值 | 维护含义 |
 |---|---:|---|

@@ -370,6 +370,45 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str | None]:
     return fields, block
 
 
+def frontmatter_sources(text: str) -> list[str]:
+    """读取 frontmatter 中的 inline 或多行 `sources` 列表。"""
+    _, block = parse_frontmatter(text)
+    if block is None:
+        return []
+
+    lines = block.splitlines()
+    for index, line in enumerate(lines):
+        match = re.match(r"^sources:\s*(.*)$", line)
+        if not match:
+            continue
+        tail = match.group(1).strip()
+        if tail in {"", "[]"}:
+            values: list[str] = []
+            if tail == "[]":
+                return values
+            for following in lines[index + 1 :]:
+                item = re.match(r"^\s+-\s+(.+?)\s*$", following)
+                if item:
+                    values.append(item.group(1).strip().strip('"\''))
+                    continue
+                if following.startswith((" ", "\t")) or not following.strip():
+                    continue
+                break
+            return values
+
+        if tail.startswith("[") and tail.endswith("]"):
+            inner = tail[1:-1].strip()
+            if not inner:
+                return []
+            quoted = re.findall(r'["\']([^"\']+)["\']', inner)
+            if quoted:
+                return [value.strip() for value in quoted if value.strip()]
+            return [value.strip() for value in inner.split(",") if value.strip()]
+
+        return [tail.strip('"\'')]
+    return []
+
+
 def strip_frontmatter(text: str) -> str:
     if not text.startswith("---\n"):
         return text
@@ -619,6 +658,85 @@ def check_markdown_links(root: Path, product_md: list[Path]) -> tuple[list[Findi
                         f"[... ]({raw_target}) -> {target} 不存在{suggestion}",
                     )
                 )
+    return findings, dict(stats)
+
+
+def check_frontmatter_sources(root: Path, product_md: list[Path]) -> tuple[list[Finding], dict[str, int]]:
+    """校验 `sources:` 中可识别的本地路径，并约束繁体原文的公开来源。
+
+    外部 URL 的可访问性由 `external_link_check.py` 负责；这里仅保证本地路径
+    在当前 Vault 中真实存在，并防止发布用繁体原文再次指向机器私有目录。
+    """
+    findings: list[Finding] = []
+    stats = Counter()
+    vault_root = infer_vault_root(root)
+    external_schemes = ("http://", "https://", "doi:")
+
+    for path in product_md:
+        text = read_text(path)
+        fields, _ = parse_frontmatter(text)
+        values = frontmatter_sources(text)
+        if values:
+            stats["pages_with_sources"] += 1
+
+        external_values = [value for value in values if value.startswith(external_schemes)]
+        if (
+            fields.get("type") == "source-text"
+            and fields.get("script") == "traditional"
+        ):
+            stats["traditional_scanned"] += 1
+            if external_values:
+                stats["traditional_with_external_source"] += 1
+            else:
+                findings.append(
+                    Finding(
+                        "ERROR",
+                        "traditional_source_external_missing",
+                        rel(path, root),
+                        None,
+                        "繁体发布原文必须至少保留一个可公开复核的外部来源 URL",
+                    )
+                )
+
+        for value in values:
+            stats["entries"] += 1
+            if value.startswith(external_schemes):
+                stats["external"] += 1
+                continue
+
+            clean_value = value.split("#", 1)[0].strip()
+            looks_local = (
+                clean_value.endswith((".md", ".pdf", ".png", ".jpg", ".jpeg", ".svg"))
+                or clean_value.startswith(("02_Learn/", "raw/", "texts/", "characters/", "events/", "concepts/", "redology/", "../", "./"))
+            )
+            if not looks_local:
+                stats["descriptive_skipped"] += 1
+                continue
+
+            if clean_value.startswith(WIKI_PREFIX):
+                candidate = root / clean_value[len(WIKI_PREFIX) :]
+            elif clean_value.startswith("02_Learn/") and vault_root is not None:
+                candidate = vault_root / clean_value
+            elif clean_value.startswith(("../", "./")):
+                candidate = path.parent / clean_value
+            else:
+                candidate = root / clean_value
+
+            if candidate.exists():
+                stats["local_ok"] += 1
+                continue
+
+            stats["local_broken"] += 1
+            findings.append(
+                Finding(
+                    "ERROR",
+                    "frontmatter_source_local_missing",
+                    rel(path, root),
+                    None,
+                    f"sources 本地路径不存在: {value}",
+                )
+            )
+
     return findings, dict(stats)
 
 
@@ -1313,6 +1431,7 @@ def check_self_description(
     root: Path,
     product_count: int,
     managed_count: int,
+    maintenance_count: int,
     dir_counts: dict[str, int],
 ) -> tuple[list[Finding], dict[str, int]]:
     findings: list[Finding] = []
@@ -1325,6 +1444,15 @@ def check_self_description(
         re.compile(r"\|\s*\*\*总计\*\*\s*\|\s*\*\*([0-9]+)\*\*"),
         re.compile(r"\|\s*\*\*总 Markdown\*\*\s*\|\s*\*\*([0-9]+)\*\*"),
     ]
+    product_patterns = [
+        re.compile(r"^\|\s*成品 Wiki Markdown\s*\|\s*(?:\*\*)?([0-9]+)(?:\*\*)?\s*\|", re.M),
+    ]
+    managed_patterns = [
+        re.compile(r"^\|\s*(?:\*\*)?成品\s*\+?\s*raw 管理口径(?:\*\*)?\s*\|\s*(?:\*\*)?([0-9]+)(?:\*\*)?\s*\|", re.M),
+    ]
+    all_markdown_patterns = [
+        re.compile(r"^\|\s*全部 Markdown\s*\|\s*(?:\*\*)?([0-9]+)(?:\*\*)?\s*\|", re.M),
+    ]
     output_patterns = [
         re.compile(r"^\|\s*输出产品\s*\|\s*\*?([0-9]+)\*?\s*\|", re.M),
         re.compile(r"^\|\s*`?outputs/?`?[^|]*\|\s*\*?([0-9]+)\*?\s*\|", re.M),
@@ -1335,6 +1463,20 @@ def check_self_description(
         if not path.exists():
             continue
         text = read_text(path)
+        for pattern in product_patterns:
+            for match in pattern.finditer(text):
+                claimed = int(match.group(1))
+                stats["product_claims"] += 1
+                if claimed != product_count:
+                    findings.append(
+                        Finding(
+                            "ERROR",
+                            "self_description_product_count",
+                            rel_doc,
+                            None,
+                            f"成品口径声称 {claimed}，实际 {product_count}",
+                        )
+                    )
         for pattern in total_patterns:
             for match in pattern.finditer(text):
                 claimed = int(match.group(1))
@@ -1348,6 +1490,35 @@ def check_self_description(
                             rel_doc,
                             None,
                             f"声称 {claimed}，当前成品口径 {product_count}；成品+raw 管理口径 {managed_count}",
+                        )
+                    )
+        for pattern in managed_patterns:
+            for match in pattern.finditer(text):
+                claimed = int(match.group(1))
+                stats["managed_claims"] += 1
+                if claimed != managed_count:
+                    findings.append(
+                        Finding(
+                            "ERROR",
+                            "self_description_managed_count",
+                            rel_doc,
+                            None,
+                            f"成品+raw 声称 {claimed}，实际 {managed_count}",
+                        )
+                    )
+        for pattern in all_markdown_patterns:
+            for match in pattern.finditer(text):
+                claimed = int(match.group(1))
+                expected = managed_count + maintenance_count
+                stats["all_markdown_claims"] += 1
+                if claimed != expected:
+                    findings.append(
+                        Finding(
+                            "ERROR",
+                            "self_description_all_markdown_count",
+                            rel_doc,
+                            None,
+                            f"全部 Markdown 声称 {claimed}，实际 {expected}",
                         )
                     )
         for pattern in output_patterns:
@@ -1364,6 +1535,49 @@ def check_self_description(
                             f"outputs 声称 {claimed}，实际 Markdown {output_actual}",
                         )
                     )
+    return findings, dict(stats)
+
+
+def check_version_consistency(root: Path) -> tuple[list[Finding], dict[str, int]]:
+    """确保 README、SCHEMA 与站点首页使用同一版本号。"""
+    findings: list[Finding] = []
+    stats = Counter()
+    versions: dict[str, str] = {}
+
+    for name in ("SCHEMA.md", "index.md"):
+        path = root / name
+        if not path.exists():
+            findings.append(Finding("ERROR", "version_document_missing", name, None, "版本文档不存在"))
+            continue
+        fields, _ = parse_frontmatter(read_text(path))
+        version = fields.get("version", "")
+        if version:
+            versions[name] = version
+            stats["declared"] += 1
+        else:
+            findings.append(Finding("ERROR", "version_missing", name, 1, "frontmatter 缺少 version"))
+
+    readme = root / "README.md"
+    if readme.exists():
+        match = re.search(r"当前版本[：:]\s*(v\d+\.\d+\.\d+)", read_text(readme))
+        if match:
+            versions["README.md"] = match.group(1)
+            stats["declared"] += 1
+        else:
+            findings.append(Finding("ERROR", "version_missing", "README.md", None, "缺少当前版本声明"))
+
+    if versions and len(set(versions.values())) == 1:
+        stats["consistent"] += 1
+    elif versions:
+        findings.append(
+            Finding(
+                "ERROR",
+                "version_mismatch",
+                "SCHEMA.md",
+                None,
+                f"版本号不一致: {versions}",
+            )
+        )
     return findings, dict(stats)
 
 
@@ -1679,6 +1893,7 @@ def render_report(
                 "- chapter_key_event_link_unlocalized 表示章节页“关键事件”链接到事件页，但该事件页没有声明对应回目；通常应补事件页定位或移除误链。",
                 "- source_anchor_not_in_body/source_anchor_duplicate 表示原文 block anchor 不在小说正文段落或重复；这会导致事件页跳转不到真正正文现场，属于 ERROR。",
                 "- source_anchor_reference_missing 表示页面链接到了不存在的原文 block anchor；链接文件存在但无法精确跳转，属于 ERROR。",
+                "- frontmatter_source_local_missing 表示 `sources:` 声明了本地文件但目标不存在；traditional_source_external_missing 表示繁体发布原文缺少可公开复核的来源 URL。",
                 "- event_source_anchor_missing 表示事件页没有提供 `texts/simplified/第xxx回.md#^hlm-*` 精确正文锚点；若已有“原文锚点”区块则先作为 WARN。",
                 "- thin_page_by_type 是内容编辑提示，不等同于错误；不同 type 使用不同阈值。",
                 "- location_flat_chapter_list 表示地点页把超过 8 个回目平铺为“相关章节”；应改为有解释的关键事件现场和推荐回读。",
@@ -1713,6 +1928,7 @@ def main() -> int:
 
     checkers = [
         ("frontmatter", lambda: check_frontmatter(root, product_md)),
+        ("frontmatter_sources", lambda: check_frontmatter_sources(root, product_md)),
         ("wikilinks", lambda: check_wikilinks(root, product_md, indexes)),
         ("table_alias_wikilinks", lambda: check_table_alias_wikilinks(root, product_md + maintenance_md)),
         ("markdown_links", lambda: check_markdown_links(root, product_md)),
@@ -1726,7 +1942,8 @@ def main() -> int:
         ("research_evidence_layers", lambda: check_research_evidence_layers(root, product_md)),
         ("location_reader_structure", lambda: check_location_reader_structure(root, product_md)),
         ("relationship_reading_surface", lambda: check_relationship_reading_surface(root, product_md)),
-        ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), dir_counts)),
+        ("self_description", lambda: check_self_description(root, len(product_md), len(product_md) + len(raw_md), len(maintenance_md), dir_counts)),
+        ("version_consistency", lambda: check_version_consistency(root)),
         ("release_log", lambda: check_release_log(root)),
         ("governance_snapshots", lambda: check_governance_snapshots(root)),
     ]

@@ -9,8 +9,8 @@
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
-from datetime import date
 from pathlib import Path
 
 from wiki_health_check import (
@@ -21,6 +21,7 @@ from wiki_health_check import (
 
 
 STATUS_FILE = "WIKI_STATUS.md"
+RELEASE_LOG_DATE_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})(?:[｜：:]|\s)")
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,16 +38,20 @@ def wiki_root(args: argparse.Namespace) -> Path:
 
 
 def release_date(root: Path) -> str:
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=no"],
-        cwd=root,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    if dirty.returncode == 0 and dirty.stdout.strip():
-        return date.today().isoformat()
+    """返回可重复的发布日期。
+
+    Vault 与发布仓库统一以 `log.md` 最新发布条目为准。只有日志不可用时才
+    回退到 Git 最新提交日期；不使用“今天”，避免同一份内容跨天变成 stale。
+    """
+    release_log = root / "log.md"
+    if release_log.exists():
+        dates = [
+            match.group(1)
+            for line in release_log.read_text(encoding="utf-8").splitlines()
+            if (match := RELEASE_LOG_DATE_RE.match(line))
+        ]
+        if dates:
+            return max(dates)
 
     latest = subprocess.run(
         ["git", "log", "-1", "--format=%as"],
@@ -58,7 +63,8 @@ def release_date(root: Path) -> str:
     )
     if latest.returncode == 0 and latest.stdout.strip():
         return latest.stdout.strip()
-    return date.today().isoformat()
+
+    raise RuntimeError("无法从 log.md 或 Git 历史确定可重复的发布日期")
 
 
 def render(root: Path) -> str:
@@ -101,7 +107,7 @@ tags: [hongloumeng, maintenance, generated]
 
 # 红楼梦 Wiki 当前状态
 
-> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；GitHub Actions 会拒绝与发布仓库不一致的状态页。
+> 本页由 `scripts/generate_wiki_status.py` 生成。数量变化后必须重新生成；Vault 与发布仓库统一使用 `log.md` 最新发布日期，只有日志不可用时才回退到 Git 日期，GitHub Actions 会拒绝不一致的状态页。
 
 ## 管理口径
 
@@ -110,7 +116,7 @@ tags: [hongloumeng, maintenance, generated]
 | 成品 Wiki Markdown | {len(product)} |
 | 维护/审查 Markdown | {len(maintenance)} |
 
-`raw/` 是本地可选的原始资料目录，不进入 Git 仓库，因此不纳入这张可复现的发布状态表；本地管理口径见维护审查报告。
+`raw/` 是本地可选的采集证据，不属于公共发布仓库或静态站依赖，因此不纳入这张可复现的发布状态表；本地管理时可与成品数分开统计。
 
 ## 读者内容
 
